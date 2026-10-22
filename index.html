@@ -49,6 +49,39 @@ canvas{display:block;width:100%;height:100%}
 #nm{font:inherit;font-size:18px;text-align:center;width:220px;padding:10px;margin-bottom:14px;border:2px solid rgba(255,255,255,.3);border-radius:12px;background:rgba(255,255,255,.08);color:var(--fg);user-select:text;-webkit-user-select:text}
 #go{font:inherit;font-weight:800;font-size:20px;letter-spacing:2px;padding:14px 38px;border:2px solid var(--accent);border-radius:14px;background:rgba(25,240,255,.12);color:var(--accent);cursor:pointer}
 #go:active{background:rgba(25,240,255,.35)}
+
+/* ---------- polish animations ---------- */
+@keyframes menuIn{from{opacity:0;transform:translateY(22px) scale(.97);filter:blur(5px)}to{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}}
+@keyframes titleGlow{0%,100%{filter:drop-shadow(0 0 8px #19f0ff35)}50%{filter:drop-shadow(0 0 22px #ff2d8a70)}}
+@keyframes buttonPulse{0%,100%{box-shadow:0 0 0 0 #19f0ff00}50%{box-shadow:0 0 0 7px #19f0ff12}}
+@keyframes cardFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+@keyframes hudIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes bannerIn{0%{opacity:0;transform:translate(-50%,-12px) scale(.94)}12%,82%{opacity:1;transform:translate(-50%,0) scale(1)}100%{opacity:0;transform:translate(-50%,-5px) scale(.98)}}
+@keyframes hitPop{0%{transform:scale(.7);opacity:0}45%{transform:scale(1.25);opacity:1}100%{transform:scale(1);opacity:0}}
+@keyframes damagePulse{0%{opacity:0}25%{opacity:1}100%{opacity:0}}
+@keyframes screenShake{0%,100%{transform:translate(0,0)}20%{transform:translate(-2px,1px)}40%{transform:translate(2px,-1px)}60%{transform:translate(-1px,-2px)}80%{transform:translate(1px,2px)}}
+#t{animation:titleGlow 3.5s ease-in-out infinite}
+#in{animation:menuIn .65s cubic-bezier(.2,.8,.2,1) both}
+#maps .mc{transition:transform .2s ease,background .2s ease,border-color .2s ease,box-shadow .2s ease}
+#maps .mc:hover{transform:translateY(-4px);box-shadow:0 8px 24px #0005}
+#maps .mc.sel{box-shadow:0 0 0 1px var(--accent),0 0 20px #19f0ff22;animation:cardFloat 3s ease-in-out infinite}
+#go{transition:transform .16s ease,background .2s ease,box-shadow .2s ease;animation:buttonPulse 2.3s ease-in-out infinite}
+#go:hover{transform:translateY(-2px) scale(1.025);background:rgba(25,240,255,.2);box-shadow:0 0 24px #19f0ff25}
+#go:active,.cb:active{transform:scale(.94)}
+#lb{transition:transform .18s ease,background .18s ease}
+#lb:hover{transform:translateY(-2px);background:#ffffff18}
+#hud #hpw,#hpt,#sc,#am{animation:hudIn .45s ease both}
+#hpf{transition:width .22s ease,background .2s ease;box-shadow:0 0 10px currentColor}
+#ch{transition:transform .08s ease,border-color .08s ease,opacity .08s ease}
+#hm.on{animation:hitPop .18s ease-out both}
+#vg{will-change:opacity}
+#bn{will-change:opacity,transform}
+.cb{transition:transform .12s ease,box-shadow .15s ease;background-clip:padding-box;box-shadow:0 0 15px #19f0ff10}
+#fire{animation:buttonPulse 2.8s ease-in-out infinite}
+#stk{box-shadow:0 0 18px #19f0ff22}
+#knb{transition:background .12s ease;box-shadow:0 0 14px #19f0ff35}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}}
+
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
@@ -160,12 +193,23 @@ let P={x:0,z:0,h:0,vy:0,vx:0,vz:0},yaw=0,pitch=0,hp=100,cur=0,mag=[30,8],cd=0,re
 let myId=0,entered=false,dead=false,sbl=[],sendT=0;
 const rc=new THREE.Raycaster(),O=new THREE.Vector3(),D=new THREE.Vector3();
 
-function banner(s,ms){const b=$("bn");b.textContent=s;b.style.opacity=1;clearTimeout(bnT);bnT=setTimeout(()=>{b.style.opacity=0},ms||1800)}
+function banner(s,ms){
+const b=$("bn");b.textContent=s;b.style.opacity=1;
+b.style.animation="none";void b.offsetWidth;b.style.animation="bannerIn "+((ms||1800)/1000)+"s ease both";
+clearTimeout(bnT);bnT=setTimeout(()=>{b.style.opacity=0;b.style.animation=""},ms||1800)
+}
 function hmk(h){const e=$("hm");e.className=h?"on h":"on";clearTimeout(hmT);hmT=setTimeout(()=>{e.className=""},110)}
 function look(dx,dy,s){yaw-=dx*s;pitch=Math.max(-1.45,Math.min(1.45,pitch-dy*s))}
 function spawnPt(){let b=null,bd=-1;for(let i=0;i<14;i++){const x=rr(-A+3,A-3),z=rr(-A+3,A-3);if(blocked(x,z))continue;let d=99;for(const q of peers.values())if(q.alive)d=Math.min(d,Math.hypot(q.x-x,q.z-z));if(d>bd){bd=d;b={x,z}}}return b||{x:0,z:0}}
 function newGame(){const s=spawnPt();P={x:s.x,z:s.z,h:0,vy:0,vx:0,vz:0};yaw=rr(0,6.28);pitch=0;hp=100;cur=0;mag=[30,8];cd=0;rel=0;sw=0;kick=0;fl=0;dead=false;vm[0].visible=true;vm[1].visible=false;fm.position.z=-.84}
-function dmgFx(){const v=$("vg");v.style.opacity=1;setTimeout(()=>{v.style.opacity=0},120);try{navigator.vibrate&&navigator.vibrate(30)}catch(e){}snd(110,.2,"sawtooth",.12,-60)}
+function dmgFx(){
+const v=$("vg");
+v.style.animation="none";void v.offsetWidth;v.style.animation="damagePulse .32s ease-out";
+document.body.style.animation="none";void document.body.offsetWidth;document.body.style.animation="screenShake .22s ease-out";
+setTimeout(()=>{v.style.animation="";document.body.style.animation=""},360);
+try{navigator.vibrate&&navigator.vibrate(30)}catch(e){}
+snd(110,.2,"sawtooth",.12,-60)
+}
 
 /* ---------- other players ---------- */
 function label(n){const c=document.createElement("canvas");c.width=256;c.height=64;const g=c.getContext("2d");g.font="bold 34px system-ui,sans-serif";g.textAlign="center";g.lineWidth=6;g.strokeStyle="#000";g.fillStyle="#fff";g.strokeText(n,128,44);g.fillText(n,128,44);
@@ -217,7 +261,7 @@ function swap(){if(sw>0)return;rel=0;cur^=1;sw=.35;vm[0].visible=!cur;vm[1].visi
 function shoot(){
 const w=WPN[cur];if(dead||cd>0||rel>0||sw>0)return;
 if(mag[cur]<=0){reload();return}
-cd=w.rate;mag[cur]--;kick=w.kick;fl=.05;mz.intensity=2.5;fm.visible=true;
+cd=w.rate;mag[cur]--;kick=w.kick;fl=.075;mz.intensity=3.2;fm.visible=true;
 const ey=1.7+P.h,sp=w.sp*(Math.hypot(P.vx,P.vz)>1?1.7:1)*(P.h>0?1.6:1);
 const mx=P.x-Math.sin(yaw)*.8+Math.cos(yaw)*.22,mz2=P.z-Math.cos(yaw)*.8-Math.sin(yaw)*.22,hits=new Map();
 O.set(P.x,ey,P.z);
@@ -281,7 +325,7 @@ if(st==="menu")cam.position.set(0,10,0);else cam.position.set(P.x,dead?.35:1.7+P
 }
 function setT(id,s){const e=$(id);if(e._s!==s){e._s=s;e.textContent=s}}
 function hud(){
-const w=WPN[cur];$("hpf").style.width=Math.max(0,hp)+"%";
+const w=WPN[cur];$("hpf").style.width=Math.max(0,hp)+"%";$("hpf").style.background=hp<30?"#ff3158":hp<60?"#ffb52e":"#3dff7a";
 setT("hpt","HP "+Math.ceil(Math.max(0,hp)));
 const l=[...sbl].sort((a,b)=>b[1]-a[1]||a[2]-b[2]).slice(0,6).map((s,i)=>(s[3]===myId?"► ":"")+(i+1)+". "+s[0]+"  "+s[1]+"/"+s[2]);
 setT("sc","ОНЛАЙН "+sbl.length+"  (убил/умер)\n"+l.join("\n"));

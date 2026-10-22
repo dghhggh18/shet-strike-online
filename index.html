@@ -49,6 +49,31 @@ canvas{display:block;width:100%;height:100%}
 #nm{font:inherit;font-size:18px;text-align:center;width:220px;padding:10px;margin-bottom:14px;border:2px solid rgba(255,255,255,.3);border-radius:12px;background:rgba(255,255,255,.08);color:var(--fg);user-select:text;-webkit-user-select:text}
 #go{font:inherit;font-weight:800;font-size:20px;letter-spacing:2px;padding:14px 38px;border:2px solid var(--accent);border-radius:14px;background:rgba(25,240,255,.12);color:var(--accent);cursor:pointer}
 #go:active{background:rgba(25,240,255,.35)}
+/* Tactical lobby + weapon inspect */
+#ov{background:linear-gradient(110deg,rgba(4,7,12,.96),rgba(10,16,23,.82)),radial-gradient(ellipse at 75% 45%,#33404b55,transparent 55%);align-items:stretch;text-align:left;padding:0}
+#in{max-width:none;width:min(1180px,100%);min-height:100%;margin:0 auto;align-items:stretch;justify-content:center;padding:clamp(18px,4vw,52px);box-sizing:border-box;position:relative}
+#t{font-size:clamp(36px,7vw,76px);letter-spacing:5px;text-align:left;color:#f0f3f5;background:none;-webkit-text-fill-color:#f0f3f5;line-height:.95;margin:0 0 10px}
+#t:after{content:' ';display:block;width:92px;height:4px;background:#e5a33b;margin-top:18px}
+#lob{align-items:flex-start;max-width:650px}
+#nm{box-sizing:border-box;width:min(100%,340px);text-align:left;border:1px solid #65717b;border-radius:2px;background:#0b1016;padding:13px 15px}
+#maps{grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.mc{border-radius:2px;border:1px solid #53616a;background:linear-gradient(135deg,#151d25,#0b1016);text-align:left;padding:14px;min-height:86px}
+.mc.sel{border-color:#e5a33b;background:linear-gradient(135deg,#473b28aa,#111820);box-shadow:inset 3px 0 #e5a33b}
+.mc i{color:#e5a33b}#go,#lb,.lobby-tab{border-radius:2px;letter-spacing:1.5px;text-transform:uppercase}
+#go{align-self:flex-start;background:#e5a33b;color:#111820;border:0;min-width:220px;margin-top:6px}
+#go:hover{background:#ffc45d;box-shadow:0 0 24px #e5a33b30}
+#lb{align-self:flex-start;border-radius:2px;border:1px solid #53616a}
+#msg{max-width:650px;text-align:left;color:#aeb8c0}
+#lobbyNav{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 28px;border-bottom:1px solid #4b5660;padding-bottom:12px}
+.lobby-tab{font:700 12px system-ui;padding:10px 14px;background:#121920;color:#aeb8c0;border:1px solid #39454e;cursor:pointer}
+.lobby-tab.active{color:#f2b64f;border-color:#e5a33b}
+#inspectBtn{position:absolute;right:22px;bottom:22px;z-index:5;pointer-events:auto;background:#151d25dd;border:1px solid #e5a33b;color:#f5c46d;border-radius:2px;padding:10px 14px;font:800 12px system-ui;display:none}
+#inspectHint{position:absolute;left:50%;top:15%;transform:translateX(-50%);font-weight:900;letter-spacing:3px;color:#e5b35a;text-shadow:0 2px 12px #000;opacity:0;pointer-events:none;transition:opacity .2s}
+#inspectHint.on{opacity:1}
+@keyframes inspectSpin{0%{transform:rotate(0)}30%{transform:rotate(-.15rad) translateY(-.08em)}65%{transform:rotate(.18rad) translateY(-.04em)}100%{transform:rotate(0)}}
+#in.inspecting{animation:inspectSpin .8s ease}
+@media(max-width:600px){#in{padding:22px 16px;justify-content:center}#t{font-size:38px}#maps{grid-template-columns:repeat(2,minmax(0,1fr))}.mc{padding:10px;min-height:78px}#inspectBtn{right:10px;bottom:10px}}
+
 
 /* ---------- polish animations ---------- */
 @keyframes menuIn{from{opacity:0;transform:translateY(22px) scale(.97);filter:blur(5px)}to{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}}
@@ -90,7 +115,7 @@ canvas{display:block;width:100%;height:100%}
 <div id="hud"><div id="hpw"><i id="hpf"></i></div><div id="hpt"></div><div id="sc"></div><div id="am"></div><div id="ch"></div><div id="hm"></div><div id="vg"></div><div id="bn"></div></div>
 <div id="tc"><div id="tl"></div><div id="stk"><div id="knb"></div></div>
 <div class="cb" id="fire">ОГОНЬ</div><div class="cb" id="jump">ПРЫЖОК</div><div class="cb" id="rel">РЕЛОАД</div><div class="cb" id="swp">СМЕНА</div></div>
-<div id="ov"><div id="in"><h1 id="t">ULTRA FPS<br>ONLINE</h1><div id="lob"><input id="nm" maxlength="12" placeholder="Твой ник" autocomplete="off"><div id="maps"></div></div><button id="go" type="button">ИГРАТЬ</button><button id="lb" type="button">В ЛОББИ</button><p id="msg"></p></div></div>
+<div id="ov"><div id="in"><nav id="lobbyNav"><button class="lobby-tab active" data-tab="play">ИГРАТЬ</button><button class="lobby-tab" data-tab="inventory">АРСЕНАЛ</button><button class="lobby-tab" data-tab="profile">ПРОФИЛЬ</button></nav><h1 id="t">SHET STRIKE<br>ONLINE</h1><div id="lob"><input id="nm" maxlength="12" placeholder="Твой ник" autocomplete="off"><div id="maps"></div></div><button id="go" type="button">ИГРАТЬ</button><button id="lb" type="button">В ЛОББИ</button><p id="msg"></p></div></div><button id="inspectBtn" type="button">F — ОСМОТР ОРУЖИЯ</button><div id="inspectHint">ОСМОТР ОРУЖИЯ</div>
 <script>
 "use strict";
 const $=id=>document.getElementById(id),cv=$("c");
@@ -162,7 +187,8 @@ const blocked=(x,z)=>obs.some(o=>x>o.x0-1&&x<o.x1+1&&z>o.z0-1&&z<o.z1+1);
 /* ---------- weapons / viewmodel ---------- */
 const WPN=[
 {n:"ВИНТОВКА",mag:30,rate:.095,dmg:15,pel:1,sp:.008,rl:1.5,kick:.05,rng:90},
-{n:"ДРОБОВИК",mag:8,rate:.85,dmg:11,pel:8,sp:.045,rl:2.2,kick:.18,rng:20}
+{n:"ДРОБОВИК",mag:8,rate:.85,dmg:11,pel:8,sp:.045,rl:2.2,kick:.18,rng:20},
+{n:"НОЖ",mag:0,rate:.48,dmg:55,pel:1,sp:0,rl:0,kick:.02,rng:2.4}
 ];
 function part(g,geo,material,x,y,z,sx=1,sy=1,sz=1,rx=0,ry=0,rz=0){
  const o=new THREE.Mesh(geo,material);o.position.set(x,y,z);o.scale.set(sx,sy,sz);o.rotation.set(rx,ry,rz);g.add(o);return o;
@@ -201,9 +227,13 @@ function makeShotgun(){
  cube(g,0,.072,-.4,.025,.012,.38,0x19f0ff);cube(g,0,.09,-.35,.035,.025,.07,0x15191e);
  return g;
 }
-const vm=[makeRifle(),makeShotgun()];
+function makeKnife(){const g=new THREE.Group();
+ cube(g,0,-.02,-.28,.055,.07,.22,0x20262d);cube(g,0,-.015,-.16,.07,.09,.08,0x11161b);
+ const blade=part(g,new THREE.BufferGeometry(),mat(0xb8c4cf),0,0,0);blade.geometry.setAttribute('position',new THREE.Float32BufferAttribute([-.018,.005,-.37,.018,.005,-.37,0,.035,-.76,-.018,.005,-.37,0,.035,-.76,-.025,.005,-.62],3));blade.geometry.computeVertexNormals();blade.material.side=THREE.DoubleSide;
+ cube(g,0,.012,-.43,.012,.012,.22,0x4d5964);return g;}
+const vm=[makeRifle(),makeShotgun(),makeKnife()];
 const vmw=new THREE.Group(),fm=new THREE.Mesh(BG,bas(0xffe070));fm.scale.set(.12,.12,.12);fm.position.set(0,0,-.99);fm.visible=false;
-vmw.add(vm[0],vm[1],fm);cam.add(vmw);
+vmw.add(vm[0],vm[1],vm[2],fm);cam.add(vmw);
 vm[0].position.z=-.39;vm[1].position.z=-.36;
 
 /* ---------- sound ---------- */
@@ -225,7 +255,7 @@ function tracer(a,b,c,d,e,f){const o=trs[ti++%16],p=o.l.geometry.attributes.posi
 /* ---------- state ---------- */
 const keys={},peers=new Map();
 let st="menu",plFail=false,firing=false,jumpReq=false,stk=null,lk=null,fid=-1,fx0=0,fy0=0,hmT=0,bnT=0,t=0;
-let P={x:0,z:0,h:0,vy:0,vx:0,vz:0},yaw=0,pitch=0,hp=100,cur=0,mag=[30,8],cd=0,rel=0,sw=0,kick=0,fl=0;
+let P={x:0,z:0,h:0,vy:0,vx:0,vz:0},yaw=0,pitch=0,hp=100,cur=0,mag=[30,8,0],inspect=0,cd=0,rel=0,sw=0,kick=0,fl=0;
 let myId=0,entered=false,dead=false,sbl=[],sendT=0;
 const rc=new THREE.Raycaster(),O=new THREE.Vector3(),D=new THREE.Vector3();
 
@@ -237,7 +267,7 @@ clearTimeout(bnT);bnT=setTimeout(()=>{b.style.opacity=0;b.style.animation=""},ms
 function hmk(h){const e=$("hm");e.className=h?"on h":"on";clearTimeout(hmT);hmT=setTimeout(()=>{e.className=""},110)}
 function look(dx,dy,s){yaw-=dx*s;pitch=Math.max(-1.45,Math.min(1.45,pitch-dy*s))}
 function spawnPt(){let b=null,bd=-1;for(let i=0;i<14;i++){const x=rr(-A+3,A-3),z=rr(-A+3,A-3);if(blocked(x,z))continue;let d=99;for(const q of peers.values())if(q.alive)d=Math.min(d,Math.hypot(q.x-x,q.z-z));if(d>bd){bd=d;b={x,z}}}return b||{x:0,z:0}}
-function newGame(){const s=spawnPt();P={x:s.x,z:s.z,h:0,vy:0,vx:0,vz:0};yaw=rr(0,6.28);pitch=0;hp=100;cur=0;mag=[30,8];cd=0;rel=0;sw=0;kick=0;fl=0;dead=false;vm[0].visible=true;vm[1].visible=false;fm.position.z=-.84}
+function newGame(){const s=spawnPt();P={x:s.x,z:s.z,h:0,vy:0,vx:0,vz:0};yaw=rr(0,6.28);pitch=0;hp=100;cur=0;mag=[30,8,0];inspect=0;cd=0;rel=0;sw=0;kick=0;fl=0;dead=false;vm[0].visible=true;vm[1].visible=false;vm[2].visible=false;fm.position.z=-.84}
 function dmgFx(){
 const v=$("vg");
 v.style.animation="none";void v.offsetWidth;v.style.animation="damagePulse .32s ease-out";
@@ -286,16 +316,17 @@ else if(m.a===myId){banner("Убил: "+m.bn,1200);snd(900,.15,"sine",.1,400)}
 const q=peers.get(m.b);if(q){q.alive=false;spark(q.x,1.2+q.h,q.z,0xff3355,24,5)}
 }
 else if(m.t==="alive"){const q=peers.get(m.id);if(q)q.alive=true}
-else if(m.t==="resp"){const s=spawnPt();P.x=s.x;P.z=s.z;P.h=0;P.vx=P.vz=P.vy=0;hp=100;mag=[30,8];rel=0;sw=0;dead=false;pitch=0;yaw=rr(0,6.28);banner("В БОЙ!",900)}
+else if(m.t==="resp"){const s=spawnPt();P.x=s.x;P.z=s.z;P.h=0;P.vx=P.vz=P.vy=0;hp=100;mag=[30,8,0];rel=0;sw=0;dead=false;pitch=0;yaw=rr(0,6.28);banner("В БОЙ!",900)}
 else if(m.t==="sb")sbl=m.l;
 }
 
 /* ---------- player actions ---------- */
 function rs(cx,cy,cz,r){const lx=cx-O.x,ly=cy-O.y,lz=cz-O.z,t=lx*D.x+ly*D.y+lz*D.z;if(t<0)return -1;const d2=lx*lx+ly*ly+lz*lz-t*t;if(d2>r*r)return -1;return Math.max(0,t-Math.sqrt(r*r-d2))}
-function reload(){const w=WPN[cur];if(rel>0||sw>0||mag[cur]>=w.mag)return;rel=w.rl;snd(200,.1,"square",.05);banner("ПЕРЕЗАРЯДКА",650)}
-function swap(){if(sw>0)return;rel=0;cur^=1;sw=.42;vm[0].visible=!cur;vm[1].visible=!!cur;fm.position.z=cur?-.99:-.99;snd(280,.09,"square",.035,-100)}
+function reload(){const w=WPN[cur];if(cur===2||rel>0||sw>0||mag[cur]>=w.mag)return;rel=w.rl;snd(200,.1,"square",.05);banner("ПЕРЕЗАРЯДКА",650)}
+function swap(to){if(sw>0)return;rel=0;cur=to===undefined?(cur+1)%3:to;sw=.42;vm.forEach((v,i)=>v.visible=i===cur);fm.position.z=-.99;snd(280,.09,"square",.035,-100);banner(WPN[cur].n,700)}
 function shoot(){
-const w=WPN[cur];if(dead||cd>0||rel>0||sw>0)return;
+const w=WPN[cur];if(dead||cd>0||rel>0||sw>0||inspect>0)return;
+if(cur===2){cd=w.rate;kick=.08;snd(140,.12,"sawtooth",.07,-80);banner("УДАР НОЖОМ",350);for(const q of peers.values()){if(!q.alive)continue;const dx=q.x-P.x,dz=q.z-P.z,dist=Math.hypot(dx,dz),dot=(dx*(-Math.sin(yaw))+dz*(-Math.cos(yaw)))/(dist||1);if(dist<2.4&&dot>.45){send({t:"hit",id:q.id,d:w.dmg});spark(q.x,1.2+q.h,q.z,0xffb94d,10,3);break}}return}
 if(mag[cur]<=0){reload();return}
 cd=w.rate;mag[cur]--;kick=w.kick;fl=.09;mz.intensity=4.2;fm.visible=true;fm.scale.set(.10+R()*.06,.10+R()*.06,.18+R()*.12);fm.rotation.z=rr(-.5,.5);
 const ey=1.7+P.h,sp=w.sp*(Math.hypot(P.vx,P.vz)>1?1.7:1)*(P.h>0?1.6:1);
@@ -339,7 +370,7 @@ P.x+=P.vx*dt;P.z+=P.vz*dt;collide(P,.45);
 if(inp&&jumpReq&&P.h<=0)P.vy=7.5;jumpReq=false;
 P.vy-=22*dt;P.h+=P.vy*dt;if(P.h<=0){P.h=0;P.vy=0}
 cd-=dt;if(sw>0)sw-=dt;
-if(rel>0){rel-=dt;if(rel<=0)mag[cur]=WPN[cur].mag}
+if(rel>0){rel-=dt;if(rel<=0)mag[cur]=WPN[cur].mag}if(inspect>0)inspect=Math.max(0,inspect-dt);
 if(inp&&firing)shoot();
 if(!dead&&mag[cur]<=0)reload();
 sendT-=dt;if(sendT<=0&&entered&&!dead){sendT=.05;send({t:"s",x:r2(P.x),y:r2(P.h),z:r2(P.z),yaw:r2(yaw)})}
@@ -358,10 +389,12 @@ if(rel>0){const f=1-rel/w.rl;dip=.07+Math.sin(f*Math.PI)*.19;tilt=.12+Math.sin(f
 if(sw>0){const f=1-sw/.42;dip+=Math.sin(f*Math.PI)*.34;tilt+=Math.sin(f*Math.PI)*.75;side+=Math.sin(f*Math.PI*2)*.12;back-=Math.sin(f*Math.PI)*.12;}
 // distinct weapon handling: rifle bolt/slide and shotgun pump move during reload and firing
 const fReload=rel>0?1-rel/w.rl:0;
-if(cur===0){vm[0].position.z=-.39+(rel>0?Math.sin(fReload*Math.PI*2)*.035:0)-kick*.35;}
-else{vm[1].position.z=-.36+(rel>0?Math.sin(fReload*Math.PI*2)*.065:0)-kick*.2;}
+vm[0].position.z=-.39+(rel>0&&cur===0?Math.sin(fReload*Math.PI*2)*.035:0)-kick*.35;
+vm[1].position.z=-.36+(rel>0&&cur===1?Math.sin(fReload*Math.PI*2)*.065:0)-kick*.2;
+vm[2].position.set(.02,-.03,-.33);
 vmw.visible=!dead&&st!=="menu";
-vmw.position.set(.26+bob*.012+side,-.27+Math.abs(bob)*.015-dip,-.2+kick+back);vmw.rotation.set(kick*1.2+tilt,0,side*.8);
+const inspecting=inspect>0,ip=inspecting?(1-inspect/1.25):0;
+vmw.position.set(.26+bob*.012+side+(inspecting?Math.sin(ip*Math.PI)*.12:0),-.27+Math.abs(bob)*.015-dip+(inspecting?.12*Math.sin(ip*Math.PI):0),-.2+kick+back+(inspecting?.18*Math.sin(ip*Math.PI):0));vmw.rotation.set(kick*1.2+tilt+(inspecting?Math.sin(ip*Math.PI*2)*.6:0),inspecting?Math.sin(ip*Math.PI)*.65:0,side*.8+(inspecting?Math.sin(ip*Math.PI)*.5:0));
 if(st==="menu")cam.position.set(0,10,0);else cam.position.set(P.x,dead?.35:1.7+P.h,P.z);cam.rotation.set(dead?.3:pitch,yaw,0);
 }
 function setT(id,s){const e=$(id);if(e._s!==s){e._s=s;e.textContent=s}}
@@ -370,11 +403,11 @@ const w=WPN[cur];$("hpf").style.width=Math.max(0,hp)+"%";$("hpf").style.backgrou
 setT("hpt","HP "+Math.ceil(Math.max(0,hp)));
 const l=[...sbl].sort((a,b)=>b[1]-a[1]||a[2]-b[2]).slice(0,6).map((s,i)=>(s[3]===myId?"► ":"")+(i+1)+". "+s[0]+"  "+s[1]+"/"+s[2]);
 setT("sc","ОНЛАЙН "+sbl.length+"  (убил/умер)\n"+l.join("\n"));
-setT("am",(rel>0?"ПЕРЕЗАРЯДКА":mag[cur]+" / ∞")+"\n"+w.n);
+setT("am",(cur===2?"БЛИЖНИЙ БОЙ":rel>0?"ПЕРЕЗАРЯДКА":mag[cur]+" / ∞")+"\n"+w.n);
 }
 
 /* ---------- flow ---------- */
-function enter(){if(!entered){newGame();entered=true}st="play";$("go").disabled=false;$("ov").style.display="none";$("hud").style.display=""}
+function enter(){if(!entered){newGame();entered=true}st="play";$("inspectBtn").style.display="block";$("go").disabled=false;$("ov").style.display="none";$("hud").style.display=""}
 function pause(tt,m,b){st="pause";firing=false;stk=null;lk=null;$("lob").style.display="none";$("lb").style.display="block";$("t").innerHTML=tt||"ПАУЗА";$("msg").textContent=m||"Игра идёт дальше — ты уязвим!";$("go").textContent=b||"ПРОДОЛЖИТЬ";$("go").disabled=false;$("ov").style.display="flex"}
 function begin(){
 initAudio();
@@ -385,7 +418,7 @@ $("go").disabled=true;$("go").textContent="ПОДКЛЮЧЕНИЕ…";join();
 }
 $("go").addEventListener("click",begin);
 const HELP=(coarse?"Левый палец — двигаться, правый — осмотр.\nОГОНЬ, ПРЫЖОК, РЕЛОАД и СМЕНА — кнопки справа.\nМожно водить пальцем по ОГОНЬ — и целиться, и стрелять.":"WASD — двигаться, мышь — целиться, ЛКМ — огонь.\nR — перезарядка, 1/2 или Q — смена оружия, Пробел — прыжок, Shift — бег.\nЕсли мышь не захватилась — смотри стрелками.")+"\nРежим: все против всех. Голова — двойной урон. Респаун через 3 секунды.";
-function showLobby(){st="menu";$("hud").style.display="none";$("lob").style.display="";$("lb").style.display="none";$("t").innerHTML="ULTRA FPS<br>ONLINE";$("msg").textContent=HELP;$("go").textContent="ИГРАТЬ";$("go").disabled=false;$("ov").style.display="flex";drawCards()}
+function showLobby(){st="menu";$("inspectBtn").style.display="none";$("hud").style.display="none";$("lob").style.display="";$("lb").style.display="none";$("t").innerHTML="ULTRA FPS<br>ONLINE";$("msg").textContent=HELP;$("go").textContent="ИГРАТЬ";$("go").disabled=false;$("ov").style.display="flex";drawCards()}
 function drawCards(){const bx=$("maps");bx.innerHTML="";MAPS.forEach((M,i)=>{const c=document.createElement("div"),b=document.createElement("b"),sp=document.createElement("span"),n=document.createElement("i");c.className="mc"+(i===selMap?" sel":"");b.textContent=M.n;sp.textContent=M.d;n.textContent="онлайн: "+(lobN[i]||0);c.append(b,sp,n);c.onclick=()=>{if(selMap===i)return;selMap=i;try{localStorage.setItem("fps_map",i)}catch(e){}buildMap(i);drawCards()};bx.appendChild(c)})}
 function toLobby(){
 if(ws){const w=ws;ws=null;w.close()}
@@ -395,6 +428,8 @@ lobT=-1e9;showLobby();
 }
 $("lb").addEventListener("click",toLobby);
 showLobby();
+$("inspectBtn").addEventListener("click",()=>{if(st==="play"){inspect=1.25;$("inspectHint").classList.add("on");setTimeout(()=>$("inspectHint").classList.remove("on"),900)}});
+document.querySelectorAll(".lobby-tab").forEach(b=>b.addEventListener("click",()=>{document.querySelectorAll(".lobby-tab").forEach(x=>x.classList.toggle("active",x===b));const tab=b.dataset.tab;if(tab==="play"){ $("lob").style.display="";$("go").style.display="";$("msg").textContent=HELP;$("t").innerHTML="SHET STRIKE<br>ONLINE"}else if(tab==="inventory"){ $("lob").style.display="none";$("go").style.display="";$("go").textContent="В БОЙ";$("msg").textContent="АРСЕНАЛ: 1 — ВИНТОВКА · 2 — ДРОБОВИК · 3 — НОЖ. В игре нажми F для осмотра оружия.";$("t").innerHTML="АРСЕНАЛ<br>ОРУЖИЕ"}else{$("lob").style.display="";$ ("maps").style.display="none";$ ("go").style.display="none";$ ("msg").textContent="ПРОФИЛЬ ИГРОКА\nНик: "+name+"\nРежим: все против всех";$ ("t").innerHTML="ПРОФИЛЬ<br>ИГРОКА"}}));
 document.addEventListener("pointerlockerror",()=>{plFail=true;banner("Мышь не захвачена — смотри стрелками ←↑↓→",3500)});
 document.addEventListener("pointerlockchange",()=>{if(!document.pointerLockElement&&st==="play"&&!coarse&&!plFail)pause()});
 document.addEventListener("visibilitychange",()=>{if(document.hidden&&st==="play")pause()});
@@ -409,7 +444,8 @@ if(e.code==="Space"){jumpReq=true;e.preventDefault()}
 if(e.code.startsWith("Arrow"))e.preventDefault();
 if(st!=="play"){if(e.code==="Enter"&&$("ov").style.display!=="none")begin();return}
 if(e.code==="KeyR")reload();
-if(e.code==="KeyQ"||(e.code==="Digit1"&&cur!==0)||(e.code==="Digit2"&&cur!==1))swap();
+if(e.code==="KeyF"){inspect=1.25;$ ("inspectHint").classList.add("on");setTimeout(()=>$("inspectHint").classList.remove("on"),900);$("in").classList.remove("inspecting");void $("in").offsetWidth;$("in").classList.add("inspecting")}
+if(e.code==="KeyQ")swap();if(e.code==="Digit1")swap(0);if(e.code==="Digit2")swap(1);if(e.code==="Digit3")swap(2);
 });
 addEventListener("keyup",e=>{keys[e.code]=false});
 addEventListener("blur",()=>{for(const k in keys)keys[k]=false;firing=false});

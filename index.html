@@ -164,11 +164,47 @@ const WPN=[
 {n:"ВИНТОВКА",mag:30,rate:.095,dmg:15,pel:1,sp:.008,rl:1.5,kick:.05,rng:90},
 {n:"ДРОБОВИК",mag:8,rate:.85,dmg:11,pel:8,sp:.045,rl:2.2,kick:.18,rng:20}
 ];
-function gun(parts){const g=new THREE.Group();for(const p of parts){const m=new THREE.Mesh(BG,mat(p[6]));m.scale.set(p[3],p[4],p[5]);m.position.set(p[0],p[1],p[2]);g.add(m)}return g}
-const vm=[gun([[0,0,-.25,.07,.1,.5,0x2b2f3a],[0,0,-.62,.035,.035,.3,0x111111],[0,-.1,-.12,.05,.12,.08,0x222222],[0,.07,-.2,.03,.03,.3,0x19f0ff]]),
-gun([[0,0,-.3,.09,.09,.6,0x5a3b22],[0,.02,-.75,.05,.05,.4,0x111111],[0,-.09,-.38,.1,.06,.2,0x444444]])];
-const vmw=new THREE.Group(),fm=new THREE.Mesh(BG,bas(0xffe070));fm.scale.set(.12,.12,.12);fm.position.set(0,0,-.84);fm.visible=false;
+function part(g,geo,material,x,y,z,sx=1,sy=1,sz=1,rx=0,ry=0,rz=0){
+ const o=new THREE.Mesh(geo,material);o.position.set(x,y,z);o.scale.set(sx,sy,sz);o.rotation.set(rx,ry,rz);g.add(o);return o;
+}
+function cube(g,x,y,z,sx,sy,sz,color){return part(g,BG,mat(color),x,y,z,sx,sy,sz)}
+function cyl(g,x,y,z,r1,r2,len,color,rotX=Math.PI/2){const geo=new THREE.CylinderGeometry(r1,r2,len,10);return part(g,geo,mat(color),x,y,z,1,1,1,rotX)}
+function makeRifle(){
+ const g=new THREE.Group();
+ // matte receiver, upper rail and handguard
+ cube(g,0,0,-.39,.105,.115,.43,0x343b46);cube(g,0,.067,-.39,.07,.018,.44,0x171c24);
+ cube(g,0,-.005,-.18,.12,.09,.2,0x252b34);cube(g,0,.005,-.59,.085,.085,.18,0x20252d);
+ // barrel and muzzle
+ cyl(g,0,.015,-.79,.022,.022,.34,0x11151b);cyl(g,0,.015,-.965,.03,.03,.055,0x454d58);
+ // handguard vents and cyan rail detail
+ for(let i=0;i<4;i++)cube(g,.061,-.005,-.28-i*.055,.008,.025,.025,0x10151b);
+ cube(g,0,.082,-.42,.018,.012,.26,0x19f0ff);
+ // magazine, grip, stock, trigger guard
+ cube(g,0,-.105,-.43,.065,.16,.105,0x171b20);cube(g,0,-.18,-.42,.05,.045,.075,0x2d333b);
+ cube(g,.012,-.11,-.25,.045,.13,.065,0x17191e);cube(g,0,-.065,-.24,.07,.012,.07,0x727b86);
+ cube(g,0,-.005,-.12,.095,.09,.2,0x222831);cube(g,0,-.005,-.035,.1,.075,.06,0x343b45);
+ // sight and optic
+ cube(g,0,.105,-.4,.018,.045,.035,0x090c11);cube(g,0,.135,-.4,.035,.025,.05,0x19f0ff);
+ cube(g,0,.095,-.66,.045,.025,.07,0x151a22);cube(g,0,.115,-.66,.022,.015,.035,0xff2d8a);
+ return g;
+}
+function makeShotgun(){
+ const g=new THREE.Group();
+ cube(g,0,0,-.36,.115,.115,.37,0x4b3828);cube(g,0,.025,-.42,.085,.055,.34,0x252a30);
+ // twin barrel tubes and dark muzzles
+ for(const x of [-.032,.032]){cyl(g,x,.015,-.72,.021,.021,.43,0x171a1f);cyl(g,x,.015,-.945,.027,.027,.045,0x59616b)}
+ // wood fore-end, stock and grip
+ cube(g,0,-.025,-.57,.13,.075,.19,0x76502f);cube(g,0,-.01,-.15,.11,.085,.22,0x49301f);
+ cube(g,0,-.105,-.3,.055,.15,.09,0x24282d);cube(g,0,-.16,-.3,.06,.04,.08,0x15191d);
+ // pump grip bands and top rail
+ for(let i=0;i<3;i++)cube(g,.069,-.025,-.52+i*.045,.008,.07,.012,0xb28a52);
+ cube(g,0,.072,-.4,.025,.012,.38,0x19f0ff);cube(g,0,.09,-.35,.035,.025,.07,0x15191e);
+ return g;
+}
+const vm=[makeRifle(),makeShotgun()];
+const vmw=new THREE.Group(),fm=new THREE.Mesh(BG,bas(0xffe070));fm.scale.set(.12,.12,.12);fm.position.set(0,0,-.99);fm.visible=false;
 vmw.add(vm[0],vm[1],fm);cam.add(vmw);
+vm[0].position.z=-.39;vm[1].position.z=-.36;
 
 /* ---------- sound ---------- */
 let AC=null;
@@ -256,12 +292,12 @@ else if(m.t==="sb")sbl=m.l;
 
 /* ---------- player actions ---------- */
 function rs(cx,cy,cz,r){const lx=cx-O.x,ly=cy-O.y,lz=cz-O.z,t=lx*D.x+ly*D.y+lz*D.z;if(t<0)return -1;const d2=lx*lx+ly*ly+lz*lz-t*t;if(d2>r*r)return -1;return Math.max(0,t-Math.sqrt(r*r-d2))}
-function reload(){const w=WPN[cur];if(rel>0||sw>0||mag[cur]>=w.mag)return;rel=w.rl;snd(200,.1,"square",.05)}
-function swap(){if(sw>0)return;rel=0;cur^=1;sw=.35;vm[0].visible=!cur;vm[1].visible=!!cur;fm.position.z=cur?-1.02:-.84}
+function reload(){const w=WPN[cur];if(rel>0||sw>0||mag[cur]>=w.mag)return;rel=w.rl;snd(200,.1,"square",.05);banner("ПЕРЕЗАРЯДКА",650)}
+function swap(){if(sw>0)return;rel=0;cur^=1;sw=.42;vm[0].visible=!cur;vm[1].visible=!!cur;fm.position.z=cur?-.99:-.99;snd(280,.09,"square",.035,-100)}
 function shoot(){
 const w=WPN[cur];if(dead||cd>0||rel>0||sw>0)return;
 if(mag[cur]<=0){reload();return}
-cd=w.rate;mag[cur]--;kick=w.kick;fl=.075;mz.intensity=3.2;fm.visible=true;
+cd=w.rate;mag[cur]--;kick=w.kick;fl=.09;mz.intensity=4.2;fm.visible=true;fm.scale.set(.10+R()*.06,.10+R()*.06,.18+R()*.12);fm.rotation.z=rr(-.5,.5);
 const ey=1.7+P.h,sp=w.sp*(Math.hypot(P.vx,P.vz)>1?1.7:1)*(P.h>0?1.6:1);
 const mx=P.x-Math.sin(yaw)*.8+Math.cos(yaw)*.22,mz2=P.z-Math.cos(yaw)*.8-Math.sin(yaw)*.22,hits=new Map();
 O.set(P.x,ey,P.z);
@@ -317,10 +353,15 @@ const kk=Math.min(1,14*dt);
 for(const q of peers.values()){const ex=Math.min(.25,t-q.rt);q.x+=(q.tx+q.vx*ex-q.x)*kk;q.z+=(q.tz+q.vz*ex-q.z)*kk;q.h+=(q.th-q.h)*kk;let dy=q.ty-q.yaw;dy=Math.atan2(Math.sin(dy),Math.cos(dy));q.yaw+=dy*kk;q.g.position.set(q.x,q.h,q.z);q.g.rotation.y=q.yaw+Math.PI;q.g.visible=q.alive}
 kick-=kick*kk;
 const mv=Math.hypot(P.vx,P.vz),bob=Math.sin(t*10)*Math.min(mv,7)/7,w=WPN[cur];
-let dip=0,tilt=0;if(rel>0){const f=rel/w.rl;dip=Math.sin(f*Math.PI)*.12;tilt=Math.sin(f*Math.PI)*.7}
-if(sw>0)dip+=Math.sin(Math.min(1,sw/.35)*Math.PI)*.25;
+let dip=0,tilt=0,side=0,back=0;
+if(rel>0){const f=1-rel/w.rl;dip=.07+Math.sin(f*Math.PI)*.19;tilt=.12+Math.sin(f*Math.PI)*.95;side=Math.sin(f*Math.PI*2)*.055;back=Math.sin(f*Math.PI)*.09;}
+if(sw>0){const f=1-sw/.42;dip+=Math.sin(f*Math.PI)*.34;tilt+=Math.sin(f*Math.PI)*.75;side+=Math.sin(f*Math.PI*2)*.12;back-=Math.sin(f*Math.PI)*.12;}
+// distinct weapon handling: rifle bolt/slide and shotgun pump move during reload and firing
+const fReload=rel>0?1-rel/w.rl:0;
+if(cur===0){vm[0].position.z=-.39+(rel>0?Math.sin(fReload*Math.PI*2)*.035:0)-kick*.35;}
+else{vm[1].position.z=-.36+(rel>0?Math.sin(fReload*Math.PI*2)*.065:0)-kick*.2;}
 vmw.visible=!dead&&st!=="menu";
-vmw.position.set(.26+bob*.012,-.27+Math.abs(bob)*.015-dip,-.2+kick);vmw.rotation.set(kick*1.2+tilt,0,0);
+vmw.position.set(.26+bob*.012+side,-.27+Math.abs(bob)*.015-dip,-.2+kick+back);vmw.rotation.set(kick*1.2+tilt,0,side*.8);
 if(st==="menu")cam.position.set(0,10,0);else cam.position.set(P.x,dead?.35:1.7+P.h,P.z);cam.rotation.set(dead?.3:pitch,yaw,0);
 }
 function setT(id,s){const e=$(id);if(e._s!==s){e._s=s;e.textContent=s}}

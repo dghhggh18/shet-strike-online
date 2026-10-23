@@ -1,93 +1,40 @@
-"use strict";
-const http = require("http"), fs = require("fs"), path = require("path");
-const { WebSocketServer } = require("ws");
-const PORT = process.env.PORT || 3000, MAX = 12, MAPS = 4;
-const page = fs.readFileSync(path.join(__dirname, "index.html"));
-const pl = new Map();
-let nid = 1;
-
-const srv = http.createServer((q, r) => {
-  if (q.url.startsWith("/lobby")) {
-    const m = new Array(MAPS).fill(0);
-    for (const p of pl.values()) if (p.j) m[p.m]++;
-    r.writeHead(200, { "Content-Type": "application/json", "Cache-Control": "no-store" });
-    r.end(JSON.stringify({ m }));
-    return;
-  }
-  if (q.url === "/health") { r.end("ok"); return; }
-  r.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
-  r.end(page);
+'use strict';
+const http=require('http'),fs=require('fs'),path=require('path');
+const {WebSocketServer,WebSocket}=require('ws');
+const PORT=process.env.PORT||3000,MAX_PLAYERS=10;
+const server=http.createServer((req,res)=>{
+ let p=req.url.split('?')[0]; if(p==='/'||p==='/index.html')p='/index.html';
+ const file=path.join(__dirname,p.replace(/^\/+/,''));
+ if(!file.startsWith(__dirname)){res.writeHead(403);return res.end('Forbidden')}
+ fs.readFile(file,(err,data)=>{if(err){res.writeHead(404);return res.end('Not found')}res.writeHead(200,{'Content-Type':file.endsWith('.html')?'text/html; charset=utf-8':file.endsWith('.js')?'text/javascript; charset=utf-8':'application/octet-stream'});res.end(data)});
 });
-const wss = new WebSocketServer({ server: srv, maxPayload: 2048 });
-
-const send = (w, o) => { if (w.readyState === 1) w.send(JSON.stringify(o)); };
-// рассылка только внутри комнаты (карты) игрока p
-const room = (p, o, ex) => { for (const q of pl.values()) if (q.j && q.m === p.m && q.ws !== ex) send(q.ws, o); };
-const sb = p => room(p, { t: "sb", l: [...pl.values()].filter(q => q.j && q.m === p.m).map(q => [q.n, q.k, q.d, q.id]) });
-const num = (v, m) => Math.max(-m, Math.min(m, +v || 0));
-
-wss.on("connection", ws => {
-  if (pl.size >= MAX * MAPS) { ws.close(); return; }
-  const p = { id: nid++, n: "Игрок", m: 0, hp: 100, k: 0, d: 0, a: true, j: false, lh: 0, ws };
-  pl.set(ws, p);
-  ws.isAlive = true;
-  ws.on("pong", () => { ws.isAlive = true; });
-
-  ws.on("message", raw => {
-    let m;
-    try { m = JSON.parse(raw); } catch (e) { return; }
-    if (m.t === "join" && !p.j) {
-      const mi = Math.max(0, Math.min(MAPS - 1, Math.floor(+m.m || 0)));
-      let cnt = 0;
-      for (const q of pl.values()) if (q.j && q.m === mi) cnt++;
-      if (cnt >= MAX) { ws.close(); return; }
-      p.m = mi;
-      p.n = String(m.n || "Игрок").replace(/[<>&]/g, "").slice(0, 12) || "Игрок";
-      p.j = true;
-      send(ws, { t: "hello", id: p.id, p: [...pl.values()].filter(q => q.j && q.m === p.m && q !== p).map(q => ({ id: q.id, n: q.n, a: q.a })) });
-      room(p, { t: "j", id: p.id, n: p.n }, ws);
-      sb(p);
-    } else if (!p.j) {
-      return;
-    } else if (m.t === "s" && p.a) {
-      room(p, { t: "s", id: p.id, x: num(m.x, 40), y: num(m.y, 10), z: num(m.z, 40), yaw: num(m.yaw, 50) }, ws);
-    } else if (m.t === "shot" && p.a && Array.isArray(m.o) && Array.isArray(m.e) && m.o.length === 3 && m.e.length === 3) {
-      room(p, { t: "shot", id: p.id, o: m.o.map(v => num(v, 200)), e: m.e.map(v => num(v, 200)) }, ws);
-    } else if (m.t === "hit" && p.a) {
-      const now = Date.now();
-      if (now - p.lh < 40) return;
-      p.lh = now;
-      let tg = null;
-      for (const q of pl.values()) if (q.j && q.m === p.m && q.id === m.id) tg = q;
-      if (!tg || !tg.a || tg === p) return;
-      tg.hp -= Math.max(0, Math.min(90, +m.d || 0));
-      send(tg.ws, { t: "hp", hp: Math.max(0, Math.round(tg.hp)) });
-      if (tg.hp <= 0) {
-        tg.a = false; p.k++; tg.d++;
-        room(p, { t: "kill", a: p.id, b: tg.id, an: p.n, bn: tg.n });
-        sb(p);
-        setTimeout(() => {
-          if (!pl.has(tg.ws)) return;
-          tg.hp = 100; tg.a = true;
-          send(tg.ws, { t: "resp" });
-          room(tg, { t: "alive", id: tg.id }, tg.ws);
-        }, 3000);
-      }
-    }
-  });
-
-  ws.on("close", () => {
-    pl.delete(ws);
-    if (p.j) { room(p, { t: "l", id: p.id }); sb(p); }
-  });
+const wss=new WebSocketServer({server});
+const players=new Map();let nextId=1,score={A:0,B:0},bomb={planted:false,by:null,x:0,z:0,until:0},round=1;
+const maps=['MIRAGE','DUST II'];const now=()=>Date.now();
+function send(ws,obj){if(ws.readyState===WebSocket.OPEN)ws.send(JSON.stringify(obj))}
+function broadcast(obj){for(const p of players.values())send(p.ws,obj)}
+function pub(){broadcast({t:'state',players:[...players.values()].map(p=>({id:p.id,n:p.n,x:p.x,z:p.z,hp:p.hp,team:p.team})),count:players.size,scores:score,mode:currentMode(),mapName:maps[currentMap()] ,round:'РАУНД '+round,bomb:bomb.planted?{text:'C4 УСТАНОВЛЕН · '+Math.max(0,Math.ceil((bomb.until-now())/1000))+'с'}:null})}
+function currentMap(){const p=players.values().next().value;return p?p.m:0}
+function currentMode(){const p=players.values().next().value;return p?p.mode:'c4'}
+function event(text){broadcast({t:'event',text})}
+function resetRound(){round++;bomb={planted:false,by:null,x:0,z:0,until:0};for(const p of players.values()){p.hp=100;p.x=p.team==='A'?-21:21;p.z=(Math.random()-.5)*8}event('Раунд '+round+' начинается');pub()}
+function nearestEnemy(shooter){let best=null,bd=1e9;for(const p of players.values()){if(p.id===shooter.id||p.hp<=0)continue;if(shooter.mode!=='ffa'&&p.team===shooter.team)continue;const d=Math.hypot(p.x-shooter.x,p.z-shooter.z);if(d<bd&&d<45){bd=d;best=p}}return best}
+wss.on('connection',ws=>{
+ const p={ws,id:String(nextId++),n:'Player',m:0,mode:'c4',team:'A',x:0,z:0,hp:100,lastShot:0};
+ ws.on('message',raw=>{let m;try{m=JSON.parse(raw)}catch{return}
+ if(m.t==='join'){if(players.size>=MAX_PLAYERS){send(ws,{t:'event',text:'Сервер заполнен (максимум 10 игроков)'});return}
+ p.n=String(m.n||'Player').slice(0,16);p.m=Number(m.m)===1?1:0;p.mode=['c4','tdm','ffa'].includes(m.mode)?m.mode:'c4';
+ const countA=[...players.values()].filter(x=>x.team==='A').length,countB=[...players.values()].filter(x=>x.team==='B').length;p.team=p.mode==='ffa'?'FFA':countA<=countB?'A':'B';p.x=p.team==='B'?21:-21;p.z=(Math.random()-.5)*8;players.set(p.id,p);send(ws,{t:'welcome',id:p.id,team:p.team,x:p.x,z:p.z});event(p.n+' подключился');pub();return}
+ if(!players.has(p.id))return;
+ if(m.t==='move'){p.x=Math.max(-25,Math.min(25,Number(m.x)||0));p.z=Math.max(-22,Math.min(22,Number(m.z)||0));p.yaw=Number(m.yaw)||0;return}
+ if(m.t==='shoot'){if(now()-p.lastShot<140||p.hp<=0)return;p.lastShot=now();let target=players.get(String(m.target));if(!target||target.id===p.id||target.hp<=0||(p.mode!=='ffa'&&p.team===target.team))return;
+ target.hp=Math.max(0,target.hp-34);send(target.ws,{t:'hit',target:target.id,hp:target.hp});if(target.hp<=0){if(p.mode==='ffa'){score[p.id]=(score[p.id]||0)+1}else score[p.team]=(score[p.team]||0)+1;event(p.n+' устранил '+target.n);target.hp=0;setTimeout(()=>{if(players.has(target.id)){target.hp=100;target.x=target.team==='B'?21:-21;target.z=(Math.random()-.5)*8;pub()}},3500);if((p.mode==='tdm'&&(score.A>=30||score.B>=30))){event('Победа команды '+(score.A>=30?'A':'B'));score={A:0,B:0};resetRound()}}pub();return}
+ if(m.t==='action'&&p.mode==='c4'){const nearSite=(x,z)=>Math.hypot(p.x-x,p.z-z)<5;const sites=p.m===0?[[-19,-16],[19,16]]:[[-19,15],[19,-15]];
+ if(!bomb.planted){if(p.team==='B'&&(nearSite(...sites[0])||nearSite(...sites[1]))){bomb={planted:true,by:p.id,x:p.x,z:p.z,until:now()+40000};event('C4 УСТАНОВЛЕН! 40 секунд до взрыва');pub()}else send(ws,{t:'event',text:'Подойди к точке A или B, чтобы установить C4 (команда B)'})}
+ else if(p.team==='A'&&Math.hypot(p.x-bomb.x,p.z-bomb.z)<4){event(p.n+' обезвреживает C4');bomb={planted:false,by:null,x:0,z:0,until:0};score.A++;event('C4 обезврежена — победа команды A');resetRound()}
+ return}
+ });
+ ws.on('close',()=>{if(players.delete(p.id)){event(p.n+' покинул сервер');pub()}});
 });
-
-setInterval(() => {
-  for (const w of pl.keys()) {
-    if (!w.isAlive) { w.terminate(); continue; }
-    w.isAlive = false;
-    w.ping();
-  }
-}, 25000);
-
-srv.listen(PORT, () => console.log("ULTRA FPS online: порт " + PORT));
+setInterval(()=>{if(bomb.planted&&now()>=bomb.until){event('C4 взорвалась — победа команды B');score.B++;resetRound()}pub()},1000);
+server.listen(PORT,()=>console.log('SHET STRIKE ONLINE listening on '+PORT));

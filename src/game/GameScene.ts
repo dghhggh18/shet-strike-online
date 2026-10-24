@@ -54,6 +54,7 @@ export class GameScene {
   private unsubscribeSkin: (() => void) | null = null;
   private frameId = 0; private disposed = false; private lastShot = 0;
   private reloading = false; private reloadTimer = 0; private jumpQueued = false;
+  private mobileActive = false;
   private lastCallout = ""; private recoil = 0;
   private readonly resizeObserver: ResizeObserver;
   private readonly onMouseDown = (e:MouseEvent) => { if(e.button===0 && this.controls.isLocked) this.fire(); };
@@ -93,7 +94,20 @@ export class GameScene {
     this.world.createCollider(RAPIER.ColliderDesc.capsule(0.55,GAME_CONFIG.player.radius).setFriction(0),this.playerBody);
     this.spawnTargets();this.animate();
   }
-  public lockPointer():void{this.controls.lock();}
+  public lockPointer():void{
+    const mobile = window.matchMedia("(pointer: coarse)").matches || ("ontouchstart" in window);
+    if(mobile){this.mobileActive=true;this.onLockChange(true);return;}
+    this.controls.lock();
+  }
+  public setTouchKey(code:string, pressed:boolean):void{if(pressed)this.keys.add(code);else this.keys.delete(code);}
+  public touchLook(dx:number,dy:number):void{
+    if(!this.mobileActive)return;
+    this.camera.rotation.order="YXZ";
+    this.camera.rotation.y-=dx*0.006;
+    this.camera.rotation.x=Math.max(-Math.PI/2,Math.min(Math.PI/2,this.camera.rotation.x-dy*0.006));
+  }
+  public fireTouch():void{if(this.mobileActive)this.fire();}
+  public stopPlaying():void{this.mobileActive=false;this.keys.clear();this.onLockChange(false);}
   public dispose():void{
     this.disposed=true;cancelAnimationFrame(this.frameId);this.resizeObserver.disconnect();
     this.attachedSocket?.off("match:state", this.onMatchState);

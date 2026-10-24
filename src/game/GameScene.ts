@@ -99,7 +99,7 @@ export class GameScene {
     if(mobile){this.mobileActive=true;this.onLockChange(true);return;}
     this.controls.lock();
   }
-  public setTouchKey(code:string, pressed:boolean):void{if(pressed)this.keys.add(code);else this.keys.delete(code);}
+  public setTouchKey(code:string, pressed:boolean):void{if(pressed){this.keys.add(code);if(code==="Space")this.jumpQueued=true;}else this.keys.delete(code);}
   public touchLook(dx:number,dy:number):void{
     if(!this.mobileActive)return;
     this.camera.rotation.order="YXZ";

@@ -1,0 +1,38 @@
+{
+  "name": "shatki-fps",
+  "private": true,
+  "version": "2.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview --host 0.0.0.0",
+    "typecheck": "tsc --noEmit -p tsconfig.app.json",
+    "server": "tsx server/src/index.ts",
+    "start": "npm run server",
+    "test": "tsx --test server/src/game/authoritative.test.ts server/src/profiles.test.ts"
+  },
+  "dependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "@dimforge/rapier3d-compat": "^0.15.1",
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "socket.io": "^4.8.1",
+    "socket.io-client": "^4.8.1",
+    "tsx": "^4.19.2",
+    "three": "^0.180.0",
+    "zustand": "^5.0.2"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.10.2",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@types/three": "^0.180.0",
+    "typescript": "~5.7.2",
+    "vite": "^6.0.5"
+  }
+}

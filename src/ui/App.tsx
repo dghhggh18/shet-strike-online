@@ -10,7 +10,8 @@ type RoomSummary={id:string;mode:"deathmatch"|"defusal";players:number;createdAt
 type Profile={id:string;nickname:string;currency:number;kills:number;deaths:number;wins:number;createdAt:number;inventory:Skin[];equipped?:Partial<Record<Skin["weaponId"],string>>;hasAccount?:boolean};
 type MatchHud={id:string;mode:"deathmatch"|"defusal";phase:string;endsAt:number;score:{T:number;CT:number};winner?:string;bomb:{planted:boolean;site:"A"|"B"|null;explodesAt:number|null;defused:boolean};players:Array<{id:string;nickname:string;team:"T"|"CT";health:number;armor:number;kills:number;deaths:number;alive:boolean}>};
 export default function App(){
-  const hostRef=useRef<HTMLDivElement>(null),gameRef=useRef<GameScene|null>(null);\n  const lookTouchRef=useRef<{x:number;y:number}|null>(null);
+  const hostRef=useRef<HTMLDivElement>(null),gameRef=useRef<GameScene|null>(null);
+  const lookTouchRef=useRef<{x:number;y:number}|null>(null);
   const [locked,setLocked]=useState(false),[screen,setScreen]=useState<Screen>("home");
   const socketRef=useRef<Socket|null>(null);
   const apiBase=import.meta.env.VITE_SERVER_URL||(import.meta.env.PROD?window.location.origin:"http://localhost:3001");

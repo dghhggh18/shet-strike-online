@@ -289,7 +289,7 @@ export class GameScene {
     if(!this.world||!this.playerBody){this.renderer.render(this.scene,this.camera);return;}
     const dt=Math.min(this.clock.getDelta(),.04);
     this.velocity.set(0,0,0);
-    if(this.controls.isLocked){
+    if(this.controls.isLocked||this.mobileActive){
       this.controls.getDirection(this.direction);this.direction.y=0;this.direction.normalize();
       const right=new THREE.Vector3().crossVectors(this.direction,this.camera.up).normalize();
       const crouch=this.keys.has("ControlLeft")||this.keys.has("ControlRight");

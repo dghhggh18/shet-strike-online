@@ -1,0 +1,33 @@
+name: Import uploaded game archive
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout upload branch
+        uses: actions/checkout@v4
+        with:
+          ref: upload/full-project
+          fetch-depth: 0
+      - name: Extract archive from main
+        run: |
+          git fetch origin main
+          git show origin/main:shatki-fps-full-prototype-v2.0.zip > /tmp/game.zip
+          mkdir /tmp/game
+          unzip -q /tmp/game.zip -d /tmp/game
+          cp -a /tmp/game/shatki-work/. .
+          rm -f shatki-fps-full-prototype-v2.0.zip
+          rm -rf node_modules dist
+          find . -name '.DS_Store' -delete
+      - name: Commit extracted project
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Import game source files from uploaded archive" || echo "No changes"
+          git push origin HEAD:upload/full-project

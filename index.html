@@ -347,7 +347,6 @@ if(inp&&jumpReq&&P.h<=0)P.vy=7.5;jumpReq=false;
 P.vy-=22*dt;P.h+=P.vy*dt;if(P.h<=0){P.h=0;P.vy=0}
 cd-=dt;if(sw>0)sw-=dt;
 if(rel>0){rel-=dt;if(rel<=0)mag[cur]=WPN[cur].mag}
-if(inp&&firing)shoot();
 if(!dead&&mag[cur]<=0)reload();
 sendT-=dt;if(sendT<=0&&entered&&!dead){sendT=.05;send({t:"s",x:r2(P.x),y:r2(P.h),z:r2(P.z),yaw:r2(yaw)})}
 }
@@ -365,6 +364,7 @@ if(sw>0)dip+=Math.sin(Math.min(1,sw/.35)*Math.PI)*.25;
 vmw.visible=!dead&&st!=="menu";
 vmw.position.set(.26+bob*.012,-.27+Math.abs(bob)*.015-dip,-.2+kick);vmw.rotation.set(kick*1.2+tilt,0,0);
 if(st==="menu")cam.position.set(0,10,0);else cam.position.set(P.x,dead?.35:1.7+P.h,P.z);cam.rotation.set(dead?.3:pitch,yaw,0);
+if(inp&&firing)shoot();
 }
 function setT(id,s){const e=$(id);if(e._s!==s){e._s=s;e.textContent=s}}
 function hud(){

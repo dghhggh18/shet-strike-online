@@ -183,7 +183,7 @@ if (THREE.GLTFLoader) {
     const bounds = new THREE.Box3().setFromObject(model);
     const size = bounds.getSize(new THREE.Vector3());
     const maxSize = Math.max(size.x, size.y, size.z) || 1;
-    model.scale.setScalar(0.9 / maxSize);
+    model.scale.setScalar(1.8 / maxSize);
     model.updateMatrixWorld(true);
 
     // Центрируем модель и размещаем перед камерой, как оружие от первого лица.
@@ -192,7 +192,7 @@ if (THREE.GLTFLoader) {
     model.position.sub(center);
     model.position.x += 0.22;
     model.position.y -= 0.22;
-    model.position.z -= 0.72;
+    model.position.z -= 0.88;
 
     vmw.remove(vm[0]);
     vm[0] = model;

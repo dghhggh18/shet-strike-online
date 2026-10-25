@@ -168,7 +168,7 @@ const WPN=[
 function gun(parts){const g=new THREE.Group();for(const p of parts){const m=new THREE.Mesh(BG,mat(p[6]));m.scale.set(p[3],p[4],p[5]);m.position.set(p[0],p[1],p[2]);g.add(m)}return g}
 const vm=[gun([[0,0,-.25,.07,.1,.5,0x2b2f3a],[0,0,-.62,.035,.035,.3,0x111111],[0,-.1,-.12,.05,.12,.08,0x222222],[0,.07,-.2,.03,.03,.3,0x19f0ff]]),
 gun([[0,0,-.3,.09,.09,.6,0x5a3b22],[0,.02,-.75,.05,.05,.4,0x111111],[0,-.09,-.38,.1,.06,.2,0x444444]])];
-const vmw=new THREE.Group(),fm=new THREE.Mesh(BG,bas(0xffe070));fm.scale.set(.025,.025,.22);fm.position.set(.22,-.22,-1.55);fm.visible=false;
+const vmw=new THREE.Group(),fm=new THREE.Group();const flashMat=bas(0xffe070),flashSquare=new THREE.Mesh(BG,flashMat),flashLine=new THREE.Mesh(BG,flashMat);flashSquare.scale.set(.07,.07,.035);flashLine.scale.set(.025,.2,.035);flashLine.position.set(0,.13,0);fm.add(flashSquare,flashLine);fm.position.set(.22,-.22,-1.55);fm.visible=false;
 vmw.add(vm[0],vm[1],fm);cam.add(vmw);
 
 // Загружаем 3D-автомат из репозитория и автоматически подгоняем размер.

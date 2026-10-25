@@ -84,6 +84,7 @@ canvas{display:block;width:100%;height:100%}
 
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 </head>
 <body>
 <canvas id="c"></canvas>
@@ -169,6 +170,22 @@ const vm=[gun([[0,0,-.25,.07,.1,.5,0x2b2f3a],[0,0,-.62,.035,.035,.3,0x111111],[0
 gun([[0,0,-.3,.09,.09,.6,0x5a3b22],[0,.02,-.75,.05,.05,.4,0x111111],[0,-.09,-.38,.1,.06,.2,0x444444]])];
 const vmw=new THREE.Group(),fm=new THREE.Mesh(BG,bas(0xffe070));fm.scale.set(.12,.12,.12);fm.position.set(0,0,-.84);fm.visible=false;
 vmw.add(vm[0],vm[1],fm);cam.add(vmw);
+
+// Загружаем 3D-автомат из репозитория. Если модель не загрузится,
+// игра продолжит работать со старым оружием.
+if (THREE.GLTFLoader) {
+  const weaponLoader = new THREE.GLTFLoader();
+  weaponLoader.load('/assets/avtomat.glb', gltf => {
+    const model = gltf.scene;
+    model.scale.setScalar(0.35);
+    model.rotation.y = Math.PI / 2;
+    model.position.set(0, 0, 0);
+    vmw.remove(vm[0]);
+    vm[0] = model;
+    vmw.add(vm[0]);
+    vm[0].visible = cur === 0;
+  }, undefined, err => console.warn('Не удалось загрузить assets/avtomat.glb', err));
+}
 
 /* ---------- sound ---------- */
 let AC=null;

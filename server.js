@@ -34,23 +34,6 @@ const srv = http.createServer((q, r) => {
     });
     return;
   }
-  // Статические игровые ресурсы (например, 3D-модели .glb)
-  let pathname;
-  try { pathname = decodeURIComponent(new URL(q.url, "http://localhost").pathname); }
-  catch (e) { r.writeHead(400); r.end("Bad request"); return; }
-  if (pathname.startsWith("/assets/")) {
-    const root = path.resolve(__dirname, "assets");
-    const file = path.resolve(__dirname, "." + pathname);
-    if (!file.startsWith(root + path.sep)) { r.writeHead(403); r.end("Forbidden"); return; }
-    fs.readFile(file, (err, data) => {
-      if (err) { r.writeHead(err.code === "ENOENT" ? 404 : 500); r.end("Not found"); return; }
-      const ext = path.extname(file).toLowerCase();
-      const types = { ".glb": "model/gltf-binary", ".gltf": "model/gltf+json", ".bin": "application/octet-stream" };
-      r.writeHead(200, { "Content-Type": types[ext] || "application/octet-stream", "Cache-Control": "public, max-age=3600" });
-      r.end(data);
-    });
-    return;
-  }
   r.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
   r.end(page);
 });

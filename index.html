@@ -306,7 +306,7 @@ const w=WPN[cur];if(dead||cd>0||rel>0||sw>0)return;
 if(mag[cur]<=0){reload();return}
 cd=w.rate;mag[cur]--;kick=w.kick;fl=.075;mz.intensity=3.2;fm.visible=true;
 const ey=1.7+P.h,sp=w.sp*(Math.hypot(P.vx,P.vz)>1?1.7:1)*(P.h>0?1.6:1);
-let muzzleWorld=null;if(muzzleAnchor){cam.updateMatrixWorld(true);muzzleAnchor.getWorldPosition(O);muzzleWorld=O.clone()}const mx=muzzleWorld?muzzleWorld.x:P.x-Math.sin(yaw)*.8+Math.cos(yaw)*.22,mz2=muzzleWorld?muzzleWorld.z:P.z-Math.cos(yaw)*.8-Math.sin(yaw)*.22,my=muzzleWorld?muzzleWorld.y:ey-.2,hits=new Map();
+let muzzleWorld=null;if(muzzleAnchor){cam.position.set(P.x,ey,P.z);cam.rotation.set(pitch,yaw,0);cam.updateMatrixWorld(true);muzzleAnchor.getWorldPosition(O);muzzleWorld=O.clone()}const mx=muzzleWorld?muzzleWorld.x:P.x-Math.sin(yaw)*.8+Math.cos(yaw)*.22,mz2=muzzleWorld?muzzleWorld.z:P.z-Math.cos(yaw)*.8-Math.sin(yaw)*.22,my=muzzleWorld?muzzleWorld.y:ey-.2,hits=new Map();
 O.set(P.x,ey,P.z);
 snd(w.pel>1?110:480,.1,"sawtooth",.07,-300);
 for(let i=0;i<w.pel;i++){

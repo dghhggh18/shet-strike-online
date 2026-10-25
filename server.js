@@ -15,6 +15,25 @@ const srv = http.createServer((q, r) => {
     return;
   }
   if (q.url === "/health") { r.end("ok"); return; }
+  // Static game assets (for example, the 3D weapon model).
+  let pathname;
+  try { pathname = new URL(q.url, "http://localhost").pathname; }
+  catch (e) { r.writeHead(400); r.end("Bad request"); return; }
+  if (pathname.startsWith("/assets/")) {
+    const assetsRoot = path.resolve(__dirname, "assets");
+    const filePath = path.resolve(__dirname, "." + pathname);
+    if (!filePath.startsWith(assetsRoot + path.sep)) {
+      r.writeHead(403); r.end("Forbidden"); return;
+    }
+    fs.readFile(filePath, (err, data) => {
+      if (err) { r.writeHead(404); r.end("Not found"); return; }
+      const ext = path.extname(filePath).toLowerCase();
+      const types = { ".glb": "model/gltf-binary", ".gltf": "model/gltf+json", ".bin": "application/octet-stream" };
+      r.writeHead(200, { "Content-Type": types[ext] || "application/octet-stream", "Cache-Control": "public, max-age=3600" });
+      r.end(data);
+    });
+    return;
+  }
   // Статические игровые ресурсы (например, 3D-модели .glb)
   let pathname;
   try { pathname = decodeURIComponent(new URL(q.url, "http://localhost").pathname); }

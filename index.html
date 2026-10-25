@@ -168,7 +168,7 @@ const WPN=[
 function gun(parts){const g=new THREE.Group();for(const p of parts){const m=new THREE.Mesh(BG,mat(p[6]));m.scale.set(p[3],p[4],p[5]);m.position.set(p[0],p[1],p[2]);g.add(m)}return g}
 const vm=[gun([[0,0,-.25,.07,.1,.5,0x2b2f3a],[0,0,-.62,.035,.035,.3,0x111111],[0,-.1,-.12,.05,.12,.08,0x222222],[0,.07,-.2,.03,.03,.3,0x19f0ff]]),
 gun([[0,0,-.3,.09,.09,.6,0x5a3b22],[0,.02,-.75,.05,.05,.4,0x111111],[0,-.09,-.38,.1,.06,.2,0x444444]])];
-const vmw=new THREE.Group(),fm=new THREE.Mesh(BG,bas(0xffe070));fm.scale.set(.055,.055,.14);fm.rotation.y=Math.PI/2;fm.position.set(0,0,-.84);fm.visible=false;
+const vmw=new THREE.Group(),fm=new THREE.Mesh(BG,bas(0xffe070));fm.scale.set(.025,.025,.22);fm.position.set(.22,-.22,-1.55);fm.visible=false;
 vmw.add(vm[0],vm[1],fm);cam.add(vmw);
 
 // Загружаем 3D-автомат из репозитория и автоматически подгоняем размер.
@@ -237,7 +237,7 @@ clearTimeout(bnT);bnT=setTimeout(()=>{b.style.opacity=0;b.style.animation=""},ms
 function hmk(h){const e=$("hm");e.className=h?"on h":"on";clearTimeout(hmT);hmT=setTimeout(()=>{e.className=""},110)}
 function look(dx,dy,s){yaw-=dx*s;pitch=Math.max(-1.45,Math.min(1.45,pitch-dy*s))}
 function spawnPt(){let b=null,bd=-1;for(let i=0;i<14;i++){const x=rr(-A+3,A-3),z=rr(-A+3,A-3);if(blocked(x,z))continue;let d=99;for(const q of peers.values())if(q.alive)d=Math.min(d,Math.hypot(q.x-x,q.z-z));if(d>bd){bd=d;b={x,z}}}return b||{x:0,z:0}}
-function newGame(){const s=spawnPt();P={x:s.x,z:s.z,h:0,vy:0,vx:0,vz:0};yaw=rr(0,6.28);pitch=0;hp=100;cur=0;mag=[30,8];cd=0;rel=0;sw=0;kick=0;fl=0;dead=false;vm[0].visible=true;vm[1].visible=false;fm.position.z=-.84}
+function newGame(){const s=spawnPt();P={x:s.x,z:s.z,h:0,vy:0,vx:0,vz:0};yaw=rr(0,6.28);pitch=0;hp=100;cur=0;mag=[30,8];cd=0;rel=0;sw=0;kick=0;fl=0;dead=false;vm[0].visible=true;vm[1].visible=false;fm.position.set(.22,-.22,-1.55)}
 function dmgFx(){
 const v=$("vg");
 v.style.animation="none";void v.offsetWidth;v.style.animation="damagePulse .32s ease-out";
@@ -293,7 +293,7 @@ else if(m.t==="sb")sbl=m.l;
 /* ---------- player actions ---------- */
 function rs(cx,cy,cz,r){const lx=cx-O.x,ly=cy-O.y,lz=cz-O.z,t=lx*D.x+ly*D.y+lz*D.z;if(t<0)return -1;const d2=lx*lx+ly*ly+lz*lz-t*t;if(d2>r*r)return -1;return Math.max(0,t-Math.sqrt(r*r-d2))}
 function reload(){const w=WPN[cur];if(rel>0||sw>0||mag[cur]>=w.mag)return;rel=w.rl;snd(200,.1,"square",.05)}
-function swap(){if(sw>0)return;rel=0;cur^=1;sw=.35;vm[0].visible=!cur;vm[1].visible=!!cur;fm.position.z=cur?-1.02:-.84}
+function swap(){if(sw>0)return;rel=0;cur^=1;sw=.35;vm[0].visible=!cur;vm[1].visible=!!cur;fm.position.set(.22,-.22,cur?-1.7:-1.55)}
 function shoot(){
 const w=WPN[cur];if(dead||cd>0||rel>0||sw>0)return;
 if(mag[cur]<=0){reload();return}

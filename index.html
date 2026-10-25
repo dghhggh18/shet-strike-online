@@ -363,8 +363,8 @@ let dip=0,tilt=0;if(rel>0){const f=rel/w.rl;dip=Math.sin(f*Math.PI)*.12;tilt=Mat
 if(sw>0)dip+=Math.sin(Math.min(1,sw/.35)*Math.PI)*.25;
 vmw.visible=!dead&&st!=="menu";
 vmw.position.set(.26+bob*.012,-.27+Math.abs(bob)*.015-dip,-.2+kick);vmw.rotation.set(kick*1.2+tilt,0,0);
-if(st==="menu")cam.position.set(0,10,0);else cam.position.set(P.x,dead?.35:1.7+P.h,P.z);cam.rotation.set(dead?.3:pitch,yaw,0);
 if(inp&&firing)shoot();
+if(st==="menu")cam.position.set(0,10,0);else cam.position.set(P.x,dead?.35:1.7+P.h,P.z);cam.rotation.set(dead?.3:pitch,yaw,0);
 }
 function setT(id,s){const e=$(id);if(e._s!==s){e._s=s;e.textContent=s}}
 function hud(){

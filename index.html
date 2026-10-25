@@ -171,20 +171,39 @@ gun([[0,0,-.3,.09,.09,.6,0x5a3b22],[0,.02,-.75,.05,.05,.4,0x111111],[0,-.09,-.38
 const vmw=new THREE.Group(),fm=new THREE.Mesh(BG,bas(0xffe070));fm.scale.set(.12,.12,.12);fm.position.set(0,0,-.84);fm.visible=false;
 vmw.add(vm[0],vm[1],fm);cam.add(vmw);
 
-// Загружаем 3D-автомат из репозитория. Если модель не загрузится,
-// игра продолжит работать со старым оружием.
+// Загружаем 3D-автомат из репозитория и автоматически подгоняем размер.
 if (THREE.GLTFLoader) {
   const weaponLoader = new THREE.GLTFLoader();
   weaponLoader.load('/assets/avtomat.glb', gltf => {
     const model = gltf.scene;
-    model.scale.setScalar(0.35);
     model.rotation.y = Math.PI / 2;
-    model.position.set(0, 0, 0);
+    model.updateMatrixWorld(true);
+
+    // Нормализуем размер модели, чтобы она не оказалась слишком большой или маленькой.
+    const bounds = new THREE.Box3().setFromObject(model);
+    const size = bounds.getSize(new THREE.Vector3());
+    const maxSize = Math.max(size.x, size.y, size.z) || 1;
+    model.scale.setScalar(0.9 / maxSize);
+    model.updateMatrixWorld(true);
+
+    // Центрируем модель и размещаем перед камерой, как оружие от первого лица.
+    const centeredBounds = new THREE.Box3().setFromObject(model);
+    const center = centeredBounds.getCenter(new THREE.Vector3());
+    model.position.sub(center);
+    model.position.x += 0.22;
+    model.position.y -= 0.22;
+    model.position.z -= 0.72;
+
     vmw.remove(vm[0]);
     vm[0] = model;
-    vmw.add(vm[0]);
-    vm[0].visible = cur === 0;
-  }, undefined, err => console.warn('Не удалось загрузить assets/avtomat.glb', err));
+    vmw.add(model);
+    model.visible = (cur === 0);
+    console.log('3D-автомат загружен');
+  }, undefined, err => {
+    console.error('Не удалось загрузить /assets/avtomat.glb:', err);
+  });
+} else {
+  console.error('GLTFLoader не загрузился');
 }
 
 /* ---------- sound ---------- */

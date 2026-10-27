@@ -59,6 +59,7 @@ canvas{display:block;width:100%;height:100%}
 #sco::before,#sco::after{content:"";position:absolute;background:rgba(0,0,0,.85)}
 #sco::before{left:calc(50% - 32vmin);width:64vmin;top:50%;height:1px}
 #sco::after{top:calc(50% - 32vmin);height:64vmin;left:50%;width:1px}
+#wv{font:inherit;font-weight:700;font-size:15px;margin-top:10px;padding:10px 26px;border:2px solid var(--pink);border-radius:12px;background:rgba(255,45,138,.14);color:var(--fg);cursor:pointer}
 /* ---------- polish animations ---------- */
 @keyframes menuIn{from{opacity:0;transform:translateY(22px) scale(.97);filter:blur(5px)}to{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}}
 @keyframes titleGlow{0%,100%{filter:drop-shadow(0 0 8px #19f0ff35)}50%{filter:drop-shadow(0 0 22px #ff2d8a70)}}
@@ -101,7 +102,7 @@ canvas{display:block;width:100%;height:100%}
 <div id="hud"><div id="hpw"><i id="hpf"></i></div><div id="hpt"></div><div id="sc"></div><div id="am"></div><div id="ch"></div><div id="hm"></div><div id="vg"></div><div id="bn"></div><div id="kf"></div><div id="dr"></div><div id="sco"></div></div>
 <div id="tc"><div id="tl"></div><div id="stk"><div id="knb"></div></div>
 <div class="cb" id="fire">ОГОНЬ</div><div class="cb" id="jump">ПРЫЖОК</div><div class="cb" id="rel">РЕЛОАД</div><div class="cb" id="swp">СМЕНА</div><div class="cb" id="zm" style="display:none">ЗУМ</div></div>
-<div id="ov"><div id="in"><h1 id="t">ULTRA FPS<br>ONLINE</h1><div id="lob"><input id="nm" maxlength="12" placeholder="Твой ник" autocomplete="off"><div id="maps"></div><div id="set"><label>Чувствительность<input id="sn" type="range" min="0.4" max="2.5" step="0.1" value="1"></label><label>Громкость<input id="vl" type="range" min="0" max="1" step="0.1" value="1"></label></div></div><button id="go" type="button">ИГРАТЬ</button><button id="lb" type="button">В ЛОББИ</button><p id="msg"></p></div></div>
+<div id="ov"><div id="in"><h1 id="t">ULTRA FPS<br>ONLINE</h1><div id="lob"><input id="nm" maxlength="12" placeholder="Твой ник" autocomplete="off"><div id="maps"></div><div id="set"><label>Чувствительность<input id="sn" type="range" min="0.4" max="2.5" step="0.1" value="1"></label><label>Громкость<input id="vl" type="range" min="0" max="1" step="0.1" value="1"></label></div></div><button id="go" type="button">ИГРАТЬ</button><button id="wv" type="button">ВОЛНЫ · БОТЫ</button><button id="lb" type="button">В ЛОББИ</button><p id="msg"></p></div></div>
 <script>
 "use strict";
 const $=id=>document.getElementById(id),cv=$("c");
@@ -233,7 +234,7 @@ function tracer(a,b,c,d,e,f){const o=trs[ti++%16],p=o.l.geometry.attributes.posi
 const keys={},peers=new Map();
 let st="menu",plFail=false,firing=false,jumpReq=false,stk=null,lk=null,fid=-1,fx0=0,fy0=0,hmT=0,bnT=0,t=0;
 let P={x:0,z:0,h:0,vy:0,vx:0,vz:0},yaw=0,pitch=0,hp=100,cur=0,mag=WPN.map(w=>w.mag),res=WPN.map(w=>w.res),cd=0,rel=0,sw=0,kick=0,fl=0;
-let myId=0,entered=false,dead=false,sbl=[],sendT=0,tmv=0,scoped=false,scL=false;
+let myId=0,entered=false,dead=false,sbl=[],sendT=0,tmv=0,scoped=false,scL=false,wave=false,wv={},wb=[],bid=1000,wbest=gv("fps_wb",0);
 const rc=new THREE.Raycaster(),O=new THREE.Vector3(),D=new THREE.Vector3();
 
 function banner(s,ms){
@@ -268,7 +269,7 @@ const p={id,n,g,x:0,z:0,h:0,yaw:0,tx:0,tz:0,th:0,ty:0,alive:true,init:0,vx:0,vz:
 function rmPeer(id){const q=peers.get(id);if(q){scene.remove(q.g);peers.delete(id)}}
 
 const pks=[],pkg=new THREE.BoxGeometry(.5,.5,.5);
-function setPk(l){for(const o of pks)scene.remove(o);pks.length=0;for(const[x,z,k,on]of l||[]){const o=new THREE.Mesh(pkg,bas(k==="h"?0x3dff7a:0xffd23d));o.position.set(x,.8,z);o.visible=!!on;scene.add(o);pks.push(o)}}
+function setPk(l){for(const o of pks)scene.remove(o);pks.length=0;for(const[x,z,k,on]of l||[]){const o=new THREE.Mesh(pkg,bas(k==="h"?0x3dff7a:0xffd23d));o.position.set(x,.8,z);o.visible=!!on;o.userData.k=k;scene.add(o);pks.push(o)}}
 function feed(s){const k=$("kf"),d=document.createElement("div");d.textContent=s;k.appendChild(d);while(k.children.length>5)k.firstChild.remove();setTimeout(()=>d.remove(),4500)}
 function dirFx(f){const q=peers.get(f);if(!q)return;const e=$("dr");e.style.transform="rotate("+(yaw-Math.atan2(-(q.x-P.x),-(q.z-P.z)))+"rad)";e.style.animation="none";void e.offsetWidth;e.style.animation="damagePulse .8s ease-out"}
 /* ---------- network (WebSocket) ---------- */
@@ -335,7 +336,7 @@ else spark(hx,hy,hz,0xffc060,4,3);
 if(tm>3)tracer(mx,my,mz2,hx,hy,hz);
 if(i===0)send({t:"shot",o:[r2(mx),r2(my),r2(mz2)],e:[r2(hx),r2(hy),r2(hz)]});
 }
-if(hits.size)send({t:"hit",w:cur,h:[...hits].map(([id,a])=>[id,Math.round(a.d),a.h?1:0])});
+if(hits.size){if(wave)wHit(hits);else send({t:"hit",w:cur,h:[...hits].map(([id,a])=>[id,Math.round(a.d),a.h?1:0])})}
 }
 
 /* ---------- update ---------- */
@@ -386,27 +387,27 @@ const zb=$("zm"),zv=cur===2?"flex":"none";if(zb._d!==zv){zb._d=zv;zb.style.displ
 const w=WPN[cur];$("hpf").style.width=Math.max(0,hp)+"%";$("hpf").style.background=hp<30?"#ff3158":hp<60?"#ffb52e":"#3dff7a";
 setT("hpt","HP "+Math.ceil(Math.max(0,hp)));
 const l=[...sbl].sort((a,b)=>b[1]-a[1]||a[2]-b[2]).slice(0,6).map((s,i)=>(s[3]===myId?"► ":"")+(i+1)+". "+s[0]+"  "+s[1]+"/"+s[2]);
-setT("sc","ОНЛАЙН "+sbl.length+"  ⏱ "+(tmv>0?Math.floor(tmv/60)+":"+String(tmv%60).padStart(2,"0"):"--")+"  (убил/умер)\n"+l.join("\n"));
+setT("sc",wave?waveTxt():"ОНЛАЙН "+sbl.length+"  ⏱ "+(tmv>0?Math.floor(tmv/60)+":"+String(tmv%60).padStart(2,"0"):"--")+"  (убил/умер)\n"+l.join("\n"));
 setT("am",(rel>0?"ПЕРЕЗАРЯДКА":mag[cur]+" / "+res[cur])+"\n"+w.n);
 }
 
 /* ---------- flow ---------- */
 function enter(){if(!entered){newGame();entered=true}st="play";$("go").disabled=false;$("ov").style.display="none";$("hud").style.display=""}
-function pause(tt,m,b){st="pause";firing=false;stk=null;lk=null;$("lob").style.display="none";$("lb").style.display="block";$("t").innerHTML=tt||"ПАУЗА";$("msg").textContent=m||"Игра идёт дальше — ты уязвим!";$("go").textContent=b||"ПРОДОЛЖИТЬ";$("go").disabled=false;$("ov").style.display="flex"}
+function pause(tt,m,b){st="pause";firing=false;stk=null;lk=null;$("lob").style.display="none";$("lb").style.display="block";$("wv").style.display="none";$("t").innerHTML=tt||"ПАУЗА";$("msg").textContent=m||(wave?"Пауза — игра остановлена.":"Игра идёт дальше — ты уязвим!");$("go").textContent=b||"ПРОДОЛЖИТЬ";$("go").disabled=false;$("ov").style.display="flex"}
 function begin(){
 initAudio();
 name=($("nm").value||"Игрок").trim().slice(0,12)||"Игрок";try{localStorage.setItem("fps_name",name)}catch(e){}
-if(!coarse&&!plFail){try{const p=cv.requestPointerLock();if(p&&p.catch)p.catch(()=>{plFail=true;banner("Мышь не захвачена — смотри стрелками ←↑↓→",3500)})}catch(e){plFail=true}}
+lockPtr();if(wave){if(wv.over)startWave();enter();return}
 if(entered){enter();return}
 $("go").disabled=true;$("go").textContent="ПОДКЛЮЧЕНИЕ…";join();
 }
-$("go").addEventListener("click",begin);
-const HELP=(coarse?"Левый палец — двигаться, правый — осмотр.\nОГОНЬ, ПРЫЖОК, РЕЛОАД и СМЕНА — кнопки справа. У снайперки появляется кнопка ЗУМ.\nМожно водить пальцем по ОГОНЬ — и целиться, и стрелять.":"WASD — двигаться, мышь — целиться, ЛКМ — огонь.\nR — перезарядка, 1–4 или Q — смена оружия, ПКМ (зажать) — прицел снайперки, Пробел — прыжок, Shift — бег.\nЕсли мышь не захватилась — смотри стрелками.")+"\nРежим: все против всех. Голова — двойной урон. Респаун через 3 секунды.";
-function showLobby(){st="menu";$("hud").style.display="none";$("lob").style.display="";$("lb").style.display="none";$("t").innerHTML="ULTRA FPS<br>ONLINE";$("msg").textContent=HELP;$("go").textContent="ИГРАТЬ";$("go").disabled=false;$("ov").style.display="flex";drawCards()}
+$("go").addEventListener("click",begin);$("wv").addEventListener("click",beginWave);
+const HELP=(coarse?"Левый палец — двигаться, правый — осмотр.\nОГОНЬ, ПРЫЖОК, РЕЛОАД и СМЕНА — кнопки справа. У снайперки появляется кнопка ЗУМ.\nМожно водить пальцем по ОГОНЬ — и целиться, и стрелять.":"WASD — двигаться, мышь — целиться, ЛКМ — огонь.\nR — перезарядка, 1–4 или Q — смена оружия, ПКМ (зажать) — прицел снайперки, Пробел — прыжок, Shift — бег.\nЕсли мышь не захватилась — смотри стрелками.")+"\nРежим: все против всех. Голова — двойной урон. Респаун через 3 секунды.\nВОЛНЫ — один против волн ботов, без онлайна.";
+function showLobby(){st="menu";$("hud").style.display="none";$("lob").style.display="";$("lb").style.display="none";$("wv").style.display="";$("t").innerHTML="ULTRA FPS<br>ONLINE";$("msg").textContent=HELP;$("go").textContent="ИГРАТЬ";$("go").disabled=false;$("ov").style.display="flex";drawCards()}
 function drawCards(){const bx=$("maps");bx.innerHTML="";MAPS.forEach((M,i)=>{const c=document.createElement("div"),b=document.createElement("b"),sp=document.createElement("span"),n=document.createElement("i");c.className="mc"+(i===selMap?" sel":"");b.textContent=M.n;sp.textContent=M.d;n.textContent="онлайн: "+(lobN[i]||0);c.append(b,sp,n);c.onclick=()=>{if(selMap===i)return;selMap=i;try{localStorage.setItem("fps_map",i)}catch(e){}buildMap(i);drawCards()};bx.appendChild(c)})}
 function toLobby(){
 if(ws){const w=ws;ws=null;w.close()}
-entered=false;setPk();for(const id of[...peers.keys()])rmPeer(id);dead=false;firing=false;stk=null;lk=null;
+entered=false;wave=false;wb.length=0;setPk();for(const id of[...peers.keys()])rmPeer(id);dead=false;firing=false;stk=null;lk=null;
 if(document.exitPointerLock)document.exitPointerLock();
 lobT=-1e9;showLobby();
 }
@@ -454,11 +455,40 @@ fb.addEventListener("pointerup",fup);fb.addEventListener("pointercancel",fup);
 const bind=(id,fn)=>$(id).addEventListener("pointerdown",e=>{e.preventDefault();if(st==="play"&&!dead)fn()});
 bind("jump",()=>{jumpReq=true});bind("rel",reload);bind("swp",swap);bind("zm",()=>{if(cur===2&&rel<=0)scoped=!scoped});
 
+/* ---------- режим ВОЛНЫ (один игрок против ботов, всё считает клиент) ---------- */
+function lockPtr(){if(!coarse&&!plFail){try{const p=cv.requestPointerLock();if(p&&p.catch)p.catch(()=>{plFail=true;banner("Мышь не захвачена — смотри стрелками ←↑↓→",3500)})}catch(e){plFail=true}}}
+function beginWave(){initAudio();name=($("nm").value||"Игрок").trim().slice(0,12)||"Игрок";try{localStorage.setItem("fps_name",name)}catch(e){}lockPtr();wave=true;entered=true;startWave();enter()}
+function wavePk(){const M=MAPS[selMap],r=GM.mkSr(M.seed+5),l=[];for(let k=0;l.length<6&&k<200;k++){const x=(r()*2-1)*(M.A-3),z=(r()*2-1)*(M.A-3);if(!blocked(x,z))l.push([x,z,l.length%2?"a":"h",1])}setPk(l)}
+function startWave(){for(const id of[...peers.keys()])rmPeer(id);wb.length=0;wv={n:0,q:0,max:4,sp:0,brk:0,kills:0,score:0,over:false,t:0};newGame();wavePk();nextWave()}
+function nextWave(){wv.n++;wv.q=3+wv.n*2;wv.max=Math.min(10,3+wv.n);wv.sp=1;banner("ВОЛНА "+wv.n,1800);if(wv.n>wbest){wbest=wv.n;try{localStorage.setItem("fps_wb",wbest)}catch(e){}}}
+function waveTxt(){return "ВОЛНА "+wv.n+(wv.brk>0?"  (пауза "+Math.ceil(wv.brk)+")":"  ·  врагов: "+(wb.length+wv.q))+"\nСчёт "+wv.score+"  ·  убито "+wv.kills+"\nРекорд: волна "+wbest}
+function spawnBot(){let x=0,z=0,ok=false;for(let k=0;k<30&&!ok;k++){x=rr(-A+3,A-3);z=rr(-A+3,A-3);if(!blocked(x,z)&&Math.hypot(x-P.x,z-P.z)>16)ok=true}
+if(!ok)return false;const q=mkPeer(bid++,"БОТ");q.bot=1;q.g.children[0].material.color.setHex(0xc23b3b);q.x=q.tx=x;q.z=q.tz=z;q.init=1;q.hp=40+wv.n*8;q.sp=2.6+Math.min(wv.n,8)*.3;q.dm=4+Math.min(wv.n,8)*.8;q.sh=wv.t+rr(1,2);q.sd=R()<.5?1:-1;q.sc=0;wb.push(q);return true}
+function wLos(a,b){const d=Math.hypot(b.x-a.x,b.z-a.z),n=Math.ceil(d);for(let i=1;i<n;i++){const x=a.x+(b.x-a.x)*i/n,z=a.z+(b.z-a.z)*i/n;for(const o of obs)if(o.h>1.5&&x>o.x0&&x<o.x1&&z>o.z0&&z<o.z1)return false}return true}
+function wHit(hits){for(const[id,a]of hits){const q=peers.get(id);if(!q||!q.bot)continue;q.hp-=a.d;if(q.hp<=0){wv.kills++;wv.score+=a.h?150:100;feed((a.h?"🎯 ":"")+"Ты ➜ "+q.n);spark(q.x,1.2,q.z,0xff3355,24,5);snd(900,.15,"sine",.1,400);const i=wb.indexOf(q);if(i>=0)wb.splice(i,1);rmPeer(id)}}}
+function wDie(){dead=true;firing=false;scoped=false;wv.over=true;banner("ТЫ ПАЛ",1800);setTimeout(()=>{if(wave&&wv.over&&st==="play"){pause("КОНЕЦ ИГРЫ","Волна "+wv.n+" · убито "+wv.kills+" · счёт "+wv.score+"\nРекорд: волна "+wbest,"ЗАНОВО");if(document.exitPointerLock)document.exitPointerLock()}},1800)}
+function waveUpdate(dt){
+if(dead)return;wv.t+=dt;
+if(wv.brk>0){wv.brk-=dt;if(wv.brk<=0)nextWave()}
+else{wv.sp-=dt;if(wv.q>0&&wv.sp<=0&&wb.length<wv.max){if(spawnBot())wv.q--;wv.sp=.8}
+if(wv.q<=0&&!wb.length){wv.score+=wv.n*100;hp=Math.min(100,hp+30);res=WPN.map(w=>w.res);banner("ВОЛНА "+wv.n+" ПРОЙДЕНА",1800);wv.brk=5}}
+for(let i=0;i<pks.length;i++){const o=pks[i];if(!o.visible||Math.hypot(o.position.x-P.x,o.position.z-P.z)>1.3)continue;
+if(o.userData.k==="h"){if(hp>=100)continue;hp=Math.min(100,hp+40);snd(700,.12,"sine",.08,300)}else{res=WPN.map(w=>w.res);banner("+ПАТРОНЫ",900)}
+o.visible=false;setTimeout(()=>{if(wave&&pks[i]===o)o.visible=true},15000)}
+for(const q of wb){const dx=P.x-q.x,dz=P.z-q.z,d=Math.hypot(dx,dz)||1,seen=d<45&&wLos(q,P);
+q.ty=Math.atan2(-dx,-dz);
+let mx,mz;if(d>9||!seen){mx=dx/d;mz=dz/d}else{if(R()<.02)q.sd=-q.sd;mx=Math.cos(q.ty)*q.sd;mz=-Math.sin(q.ty)*q.sd}
+if(q.sc>8){mx=Math.cos(q.ty)*q.sd;mz=-Math.sin(q.ty)*q.sd}
+const ox=q.x,oz=q.z;q.x+=mx*q.sp*dt;q.z+=mz*q.sp*dt;collide(q,.45);q.tx=q.x;q.tz=q.z;
+q.sc=Math.hypot(q.x-ox,q.z-oz)<q.sp*dt*.3?q.sc+1:0;
+if(seen&&d<40&&wv.t>q.sh&&!dead){q.sh=wv.t+rr(.9,1.6)-Math.min(wv.n,8)*.05;tracer(q.x,1.5,q.z,P.x+rr(-.5,.5),1.4,P.z+rr(-.5,.5));snd(300,.06,"sawtooth",Math.min(.05,.7/(d+8)),-150);
+if(R()<.25+Math.min(wv.n,8)*.03){hp-=q.dm;dmgFx();dirFx(q.id);if(hp<=0){wDie();return}}}}
+}
 /* ---------- loop ---------- */
 let last=performance.now();
 function loop(n){
 const dt=Math.min(.05,(n-last)/1000);last=n;t+=dt;
-if(st==="play"||st==="pause"){update(dt);hud()}else if(st==="menu"){yaw+=dt*.15;pitch=-.5;if(n-lobT>3000&&$("ov").style.display!=="none")lobby()}
+if(st==="play"||st==="pause"){if(!(wave&&st==="pause"))update(dt);if(wave&&st==="play")waveUpdate(dt);hud()}else if(st==="menu"){yaw+=dt*.15;pitch=-.5;if(n-lobT>3000&&$("ov").style.display!=="none")lobby()}
 fxUpdate(dt);ren.render(scene,cam);
 requestAnimationFrame(loop);
 }

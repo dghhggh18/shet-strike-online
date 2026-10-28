@@ -10,12 +10,17 @@ const WPN=[
 {n:"ВИНТОВКА",mag:30,res:90,rate:.095,dmg:15,pel:1,sp:.008,rl:1.5,kick:.05,rng:90},
 {n:"ДРОБОВИК",mag:8,res:24,rate:.85,dmg:11,pel:8,sp:.045,rl:2.2,kick:.18,rng:20},
 {n:"СНАЙПЕРКА",mag:5,res:15,rate:1.2,dmg:80,pel:1,sp:.0015,rl:2.6,kick:.22,rng:150},
-{n:"ПИСТОЛЕТ",mag:12,res:48,rate:.22,dmg:22,pel:1,sp:.012,rl:1.1,kick:.07,rng:70}];
+{n:"ПИСТОЛЕТ",mag:12,res:48,rate:.22,dmg:22,pel:1,sp:.012,rl:1.1,kick:.07,rng:70},
+{n:"НОЖ",mag:9999,res:0,rate:.55,dmg:50,pel:1,sp:0,rl:1,kick:-.28,rng:2.6,melee:1}];
+const GRN={dmg:80,rad:6,fuse:2,rate:1,rng:35,pel:1};
 const mkSr=a=>()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};
 function genObs(i){const M=MAPS[i],A=M.A,sr=mkSr(M.seed),srr=(a,b)=>a+sr()*(b-a),obs=[];
+const S=(x0,x1,z0,z1,h,c)=>obs.push({x0,x1,z0,z1,h,x:(x0+x1)/2,z:(z0+z1)/2,w:x1-x0,d:z1-z0,ci:c});
+for(const s of[1,-1]){const cx=s*A*.5,cz=-s*A*.5;S(cx-3,cx+3,cz-3,cz+3,2,1);   // вышка 2м + лестница из 3 ступеней по 0.5м
+for(let k=1;k<=3;k++){const a=cx-s*(3+2*(4-k)),b=cx-s*(3+2*(3-k));S(Math.min(a,b),Math.max(a,b),cz-2,cz+2,k*.5,2)}}
 for(let n=0,k=0;n<M.cnt&&k<600;k++){const w=srr(M.w[0],M.w[1]),d=srr(M.w[0],M.w[1]),h=srr(M.h[0],M.h[1]),x=srr(-A+4,A-4),z=srr(-A+4,A-4);
 if(Math.abs(x)<w/2+4&&Math.abs(z)<d/2+4)continue;
 let ok=true;for(const o of obs)if(x-w/2-2<o.x1&&x+w/2+2>o.x0&&z-d/2-2<o.z1&&z+d/2+2>o.z0){ok=false;break}
 if(!ok)continue;obs.push({x0:x-w/2,x1:x+w/2,z0:z-d/2,z1:z+d/2,h,x,z,w,d,ci:n});n++}return obs}
-g.GM={MAPS,WPN,mkSr,genObs};if(typeof module!=="undefined")module.exports=g.GM;
+g.GM={MAPS,WPN,GRN,mkSr,genObs};if(typeof module!=="undefined")module.exports=g.GM;
 })(typeof window!=="undefined"?window:globalThis);

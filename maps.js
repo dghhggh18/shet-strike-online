@@ -11,7 +11,9 @@ const WPN=[
 {n:"ДРОБОВИК",mag:8,res:24,rate:.85,dmg:11,pel:8,sp:.045,rl:2.2,kick:.18,rng:20},
 {n:"СНАЙПЕРКА",mag:5,res:15,rate:1.2,dmg:80,pel:1,sp:.0015,rl:2.6,kick:.22,rng:150},
 {n:"ПИСТОЛЕТ",mag:12,res:48,rate:.22,dmg:22,pel:1,sp:.012,rl:1.1,kick:.07,rng:70},
-{n:"НОЖ",mag:9999,res:0,rate:.55,dmg:50,pel:1,sp:0,rl:1,kick:-.28,rng:2.6,melee:1}];
+{n:"НОЖ",mag:9999,res:0,rate:.55,dmg:50,pel:1,sp:0,rl:1,kick:-.28,rng:2.6,melee:1},
+{n:"ПП",mag:25,res:100,rate:.06,dmg:11,pel:1,sp:.018,rl:1.3,kick:.03,rng:45},
+{n:"ТИХИЙ",mag:20,res:80,rate:.1,dmg:17,pel:1,sp:.009,rl:1.6,kick:.035,rng:80,sil:1}];
 const GRN={dmg:80,rad:6,fuse:2,rate:1,rng:35,pel:1};
 const mkSr=a=>()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};
 function genObs(i){const M=MAPS[i],A=M.A,sr=mkSr(M.seed),srr=(a,b)=>a+sr()*(b-a),obs=[];

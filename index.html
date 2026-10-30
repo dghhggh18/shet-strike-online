@@ -272,6 +272,11 @@ const world=[],wmats=[],obs=[],occ=[];
 function tm(c){const m=mat(c);wmats.push(m);return m}
 const holes=[],hg=new THREE.CircleGeometry(.07,8),hmt=new THREE.MeshBasicMaterial({color:0x111111}),blobG=new THREE.CircleGeometry(.55,12),blobM=new THREE.MeshBasicMaterial({color:0,transparent:true,opacity:.35,depthWrite:false});let hi=0;
 function clearWorld(){for(const m of holes)scene.remove(m);holes.length=0;hi=0;for(const o of world){scene.remove(o);if(o.geometry&&o.geometry!==BG)o.geometry.dispose()}world.length=0;for(const m of wmats){if(m.map)m.map.dispose();m.dispose()}wmats.length=0;obs.length=0;occ.length=0}
+const HID=new THREE.MeshBasicMaterial();   // невидимые блоки для лучей: в сцену не добавляются, только считаются попадания
+function hbox(r){const o=new THREE.Mesh(BG,HID);o.scale.set(r[3],r[4],r[5]);o.position.set(r[0],r[1],r[2]);o.updateMatrixWorld(true);return o}
+function mgGeo(list,src,idx){const n=list.length,bp=src.attributes.position.array,nv=bp.length/3,ni=idx?idx.length:0,P=new Float32Array(n*bp.length),I=idx?new(n*nv<65535?Uint16Array:Uint32Array)(n*ni):null;
+for(let k=0;k<n;k++){const b=list[k],o=k*bp.length;for(let v=0;v<nv;v++){P[o+v*3]=bp[v*3]*b[3]+b[0];P[o+v*3+1]=bp[v*3+1]*b[4]+b[1];P[o+v*3+2]=bp[v*3+2]*b[5]+b[2]}if(I)for(let t=0;t<ni;t++)I[k*ni+t]=idx[t]+k*nv}
+const g=new THREE.BufferGeometry();g.setAttribute("position",new THREE.BufferAttribute(P,3));if(I)g.setIndex(new THREE.BufferAttribute(I,1));return g}
 function buildMap(i){
 const M=MAPS[i];clearWorld();A=M.A;sr=mkSr(M.seed);
 scene.background=new THREE.Color(M.bg);scene.fog=new THREE.Fog(M.bg,M.fog[0],M.fog[1]);
@@ -282,9 +287,17 @@ const tx=new THREE.CanvasTexture(c);tx.wrapS=tx.wrapT=THREE.RepeatWrapping;tx.re
 const fm=new THREE.MeshLambertMaterial({map:tx});wmats.push(fm);
 const fl=new THREE.Mesh(new THREE.PlaneGeometry(A*2,A*2),fm);fl.rotation.x=-Math.PI/2;scene.add(fl);world.push(fl);
 const wm=tm(M.wall),sm=new THREE.MeshBasicMaterial({color:M.strip}),em=new THREE.LineBasicMaterial({color:M.edge});wmats.push(sm,em);
-for(const[x,z,w,d]of[[0,-A-.5,A*2+2,1],[0,A+.5,A*2+2,1],[-A-.5,0,1,A*2+2],[A+.5,0,1,A*2+2]]){occ.push(box(x,3.5,z,w,7,d,wm));box(x,5,z,w>1?w:1.06,.15,d>1?d:1.06,sm)}
+const wl=[],sl=[];for(const[x,z,w,d]of[[0,-A-.5,A*2+2,1],[0,A+.5,A*2+2,1],[-A-.5,0,1,A*2+2],[A+.5,0,1,A*2+2]]){const r=[x,3.5,z,w,7,d];wl.push(r);occ.push(hbox(r));sl.push([x,5,z,w>1?w:1.06,.15,d>1?d:1.06])}
 const cm=M.pal.map(tm);
-for(const b of genObs(i)){const m=box(b.x,b.h/2,b.z,b.w,b.h,b.d,cm[b.ci%cm.length]);m.add(new THREE.LineSegments(EG,em));occ.push(m);obs.push(b)}
+const grp=new Map(),eg=[];
+for(const b of genObs(i)){const mt=cm[b.ci%cm.length],r=[b.x,b.h/2,b.z,b.w,b.h,b.d];if(!grp.has(mt))grp.set(mt,[]);grp.get(mt).push(r);eg.push(r);occ.push(hbox(r));obs.push(b)}
+try{const out=[];for(const[mt,l]of grp)out.push(new THREE.Mesh(mgGeo(l,BG,BG.index.array),mt));
+out.push(new THREE.LineSegments(mgGeo(eg,EG,null),em));out.push(new THREE.Mesh(mgGeo(wl,BG,BG.index.array),wm),new THREE.Mesh(mgGeo(sl,BG,BG.index.array),sm));
+for(const o of out){scene.add(o);world.push(o)}}
+catch(e){console.error("склейка блоков не удалась, рисуем по одному:",e);
+for(const[mt,l]of grp)for(const r of l)box(r[0],r[1],r[2],r[3],r[4],r[5],mt);
+for(const r of eg){const ln=new THREE.LineSegments(EG,em);ln.scale.set(r[3],r[4],r[5]);ln.position.set(r[0],r[1],r[2]);scene.add(ln);world.push(ln)}
+for(const r of wl)box(r[0],r[1],r[2],r[3],r[4],r[5],wm);for(const r of sl)box(r[0],r[1],r[2],r[3],r[4],r[5],sm)}
 }
 let selMap=0,jm=0,lobN=[0,0,0,0],lobT=-1e9;try{selMap=+localStorage.getItem("fps_map")||0}catch(e){}
 if(selMap<0||selMap>=MAPS.length)selMap=0;

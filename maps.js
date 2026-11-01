@@ -24,5 +24,15 @@ for(let n=0,k=0;n<M.cnt&&k<600;k++){const w=srr(M.w[0],M.w[1]),d=srr(M.w[0],M.w[
 if(Math.abs(x)<w/2+4&&Math.abs(z)<d/2+4)continue;
 let ok=true;for(const o of obs)if(x-w/2-2<o.x1&&x+w/2+2>o.x0&&z-d/2-2<o.z1&&z+d/2+2>o.z0){ok=false;break}
 if(!ok)continue;obs.push({x0:x-w/2,x1:x+w/2,z0:z-d/2,z1:z+d/2,h,x,z,w,d,ci:n});n++}return obs}
-g.GM={MAPS,WPN,GRN,mkSr,genObs};if(typeof module!=="undefined")module.exports=g.GM;
+const SHOP=(()=>{   // каталог скинов, ящики и уровни — общие для сервера и клиента
+const WN=["Винтовка","Дробовик","Снайперка","Пистолет","Нож","ПП","Тихий"],DUP=[15,40,100,250],
+PAL=[["Пустыня",0,0xc8a15a,0x7a5a2a],["Лес",0,0x4d6b3a,0x23331c],["Лёд",1,0xaee6ff,0x4a7aa8],["Неон",1,0x19f0ff,0xff2d8a],["Огонь",2,0xff5a1f,0x3a1208],["Золото",3,0xe0b53b,0x5a3b10]],
+AGENTS=[["Классика",0x3b5b8c],["Пустыня",0xa8803c],["Лес",0x3f6b3a],["Ночь",0x2a2e3d],["Огонь",0xb5442a],["Фиолет",0x6a3fa0]],
+CASES=[{n:"Боевой ящик",p:100,col:0x5a6b86,w:[60,30,9,1]},{n:"Элитный ящик",p:350,col:0x8a5a1c,w:[0,55,35,10]}],SK={},CAT=[];
+for(let w=0;w<WPN.length;w++){SK[w+"_d"]={id:w+"_d",w,n:WN[w]+" «Стандарт»",r:0,d:1,c:[0,0]};CAT.push(SK[w+"_d"]);PAL.forEach((p,k)=>{const o={id:w+"_"+k,w,n:WN[w]+" «"+p[0]+"»",r:p[1],c:[p[2],p[3]]};SK[o.id]=o;CAT.push(o)})}
+const lvl=xp=>{xp=Math.max(0,Math.min(+xp||0,1e9));let l=1,n=100+l*40;while(xp>=n){xp-=n;l++;n=100+l*40}return[l,xp,n]};
+const reward=L=>({c:20+L*5,f:L%3===0?1:0});
+const roll=(t,rnd)=>{const w=CASES[t].w;let x=rnd()*w.reduce((a,b)=>a+b,0),r=0;for(;r<3;r++){if(x<w[r])break;x-=w[r]}const p=CAT.filter(s=>!s.d&&s.r===r);return p[Math.min(p.length-1,Math.floor(rnd()*p.length))]};
+return{WN,DUP,PAL,AGENTS,CASES,SK,CAT,lvl,reward,roll}})();
+g.GM={MAPS,WPN,GRN,SHOP,mkSr,genObs};if(typeof module!=="undefined")module.exports=g.GM;
 })(typeof window!=="undefined"?window:globalThis);

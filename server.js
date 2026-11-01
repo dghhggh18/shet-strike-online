@@ -2,6 +2,7 @@
 const http = require("http"), fs = require("fs"), path = require("path");
 const { WebSocketServer } = require("ws");
 const GM = require("./maps.js"), MP = GM.MAPS, WPN = GM.WPN, GRN = GM.GRN;
+const A = require("./auth.js");   // аккаунты (работают только при DATABASE_URL)
 const PORT = process.env.PORT || 3000, MAX = 12, NM = MP.length, RND = 180000, BRK = 8000;
 const page = fs.readFileSync(path.join(__dirname, "index.html"));
 const mapsJs = fs.readFileSync(path.join(__dirname, "maps.js"));
@@ -37,6 +38,7 @@ const getRoom = (k, mi, team, gm) => {
 for (let i = 0; i < NM; i++) getRoom(String(i), i, false, "ffa");
 
 const srv = http.createServer((q, r) => {
+  if (q.url.startsWith("/api/")) { A.handle(q, r, q.url.split("?")[0]); return; }
   if (q.url.startsWith("/lobby")) {
     r.writeHead(200, { "Content-Type": "application/json", "Cache-Control": "no-store" });
     r.end(JSON.stringify({ m: MP.map((_, i) => inRoom(String(i)).length) })); return;
@@ -90,6 +92,8 @@ function hurt(tg, at, d, hs, wi) {
   send(tg.ws, { t: "hp", hp: Math.max(0, Math.round(tg.hp)), f: at.id });
   if (tg.hp > 0) return;
   tg.a = false; at.k++; tg.d++;
+  if (at.acc && at !== tg) { const up = A.kill(at.acc, tg.acc ? "a" + tg.acc.id : "g" + tg.id, hs); send(at.ws, { t: "prof", p: A.pub(at.acc), up }); }   // награду выдаёт только сервер
+  if (tg.acc) { A.death(tg.acc); send(tg.ws, { t: "prof", p: A.pub(tg.acc) }); }
   if (R.gm === "arms") {
     if (wi === 4 && tg.al > 0) { tg.al--; send(tg.ws, { t: "al", l: tg.al }); }
     if (wi === LAD[at.al] && !R.win) { if (at.al >= LAD.length - 1) { R.win = at.id; R.rd.end = Date.now(); } else { at.al++; send(at.ws, { t: "al", l: at.al }); } }
@@ -143,6 +147,13 @@ wss.on("connection", ws => {
     let m;
     try { m = JSON.parse(raw); } catch (e) { return; }
     if (!m || typeof m !== "object") return;
+    if (m.t === "join" && !p.j && m.at && !m._a && A.on) {   // сначала проверяем вход в аккаунт
+      A.byToken(String(m.at)).then(a => { p.acc = a || null; }).catch(() => {}).then(() => { m._a = 1; onMsg(m); });
+      return;
+    }
+    onMsg(m);
+  });
+  const onMsg = m => {
     const now = Date.now();
     if (m.t === "join" && !p.j) {
       const code = String(m.rk || "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6);
@@ -151,6 +162,7 @@ wss.on("connection", ws => {
       if (ps.length >= MAX) { ws.close(); return; }
       p.m = key;
       p.n = String(m.n || "Игрок").replace(/[<>&]/g, "").slice(0, 12) || "Игрок";
+      if (p.acc) p.n = p.acc.name;
       p.tok = String(m.tok || "").slice(0, 16);
       const g = ghosts.get(p.tok);                      // переподключение: возвращаем счёт и команду
       if (g && g.m === key && now - g.t < 30000) { p.k = g.k; p.d = g.d; p.tm = g.tm; p.al = g.al | 0; }
@@ -158,6 +170,7 @@ wss.on("connection", ws => {
       ghosts.delete(p.tok);
       p.j = true; p.inv = now + 2000;
       send(ws, { t: "hello", id: p.id, tm: p.tm, mi: R.mi, rk: code, gm: R.gm, al: p.al | 0, ts: R.ts, fl: R.fl ? flOut(R) : null, p: ps.map(q => ({ id: q.id, n: q.n, a: q.a, tm: q.tm })), pk: R.pk.map(k => [k.x, k.z, k.k, k.on ? 1 : 0]), s: Math.ceil(Math.max(0, R.rd.end - now) / 1000) });
+      if (p.acc) send(ws, { t: "prof", p: A.pub(p.acc) });
       room(key, { t: "j", id: p.id, n: p.n, tm: p.tm }, ws);
       sb(key);
     } else if (!p.j) {
@@ -197,7 +210,7 @@ wss.on("connection", ws => {
         hurt(tg, p, Math.max(0, Math.min(w.dmg * w.pel * (gw ? 1 : 2.5), +e[1] || 0)), e[2], wi);
       }
     }
-  });
+  };
 
   ws.on("close", () => {
     pl.delete(ws);
@@ -218,3 +231,5 @@ setInterval(() => {
 }, 25000);
 
 srv.listen(PORT, () => console.log("ULTRA FPS online: порт " + PORT));
+
+module.exports = { srv, A };

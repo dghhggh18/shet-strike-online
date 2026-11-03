@@ -336,6 +336,19 @@ const GUNP=[[[0,0,-.25,.07,.1,.5,0x2b2f3a],[0,0,-.62,.035,.035,.3,0x111111],[0,-
 [[0,0,-.3,.08,.09,.6,0x2b3a2f],[0,.02,-.75,.045,.045,.35,0x111111],[0,.02,-1.05,.065,.065,.3,0x1a1a1a],[0,-.09,-.38,.1,.06,.2,0x444444]]],vm=GUNP.map(gun);
 const vmw=new THREE.Group(),fm=new THREE.Group();const flashMat=bas(0xffe070),flashSquare=new THREE.Mesh(BG,flashMat),flashLine=new THREE.Mesh(BG,flashMat);flashSquare.scale.set(.07,.07,.035);flashLine.scale.set(.025,.2,.035);flashLine.position.set(0,.13,0);fm.add(flashSquare,flashLine);fm.visible=false;let muzzleAnchor=null;
 vmw.add(...vm,fm);cam.add(vmw);
+// Руки: рукав (цвет команды или агента) + кулак. Позиции кулаков заданы для каждого оружия в координатах vmw.
+const HM={sk:bas(0xd9a073),sl:bas(0x3b5b8c),cf:bas(0x2a3d5e)};
+function mkArm(L){const g=new THREE.Group(),f=new THREE.Mesh(BG,HM.sk),c=new THREE.Mesh(BG,HM.cf),r=new THREE.Mesh(BG,HM.sl);g.rotation.order="YXZ";
+f.scale.set(.11,.11,.12);c.scale.set(.14,.14,.05);c.position.z=.085;r.scale.set(.125,.125,L);r.position.z=.11+L/2;g.add(f,c,r);return g}
+const armR=mkArm(.9),armL=mkArm(1.3);vmw.add(armR,armL);
+function aim(g,d){const l=Math.hypot(d[0],d[1],d[2]);g.rotation.y=Math.atan2(d[0],d[2]);g.rotation.x=-Math.asin(d[1]/l)}
+aim(armR,[.35,-.55,.8]);aim(armL,[-.05,-.5,.85]);
+// [правая рука, левая рука] для оружия 0..6; у винтовки с моделью (GLB) свои точки — посчитаны по размерам модели
+const HANDS=[{r:[0,-.11,-.05],l:[0,-.08,-.42]},{r:[0,-.1,-.04],l:[0,-.1,-.42]},{r:[0,-.09,-.02],l:[0,-.08,-.55]},{r:[0,-.07,-.04],l:null},{r:[0,-.03,-.03],l:null},{r:[0,-.1,-.05],l:[0,-.07,-.33]},{r:[0,-.1,-.08],l:[0,-.08,-.5]}],
+HANDS_G={r:[.22,-.28,-.56],l:[.22,-.24,-1.09]},
+// сдвиг всей «вьюмодели» для каждого оружия, чтобы оружие и руки были в кадре (винтовка с моделью — без сдвига)
+VOFF=[[.0,.1,-.32],[.0,.1,-.3],[-.02,.11,-.35],[.05,.09,-.3],[.06,.1,-.15],[.02,.09,-.25],[-.02,.11,-.35]],VOFF_G=[0,0,0];
+let hkey="",hcK="",hb=HANDS[0],pvw=0;
 
 // Загружаем 3D-автомат из репозитория и автоматически подгоняем размер.
 if (THREE.GLTFLoader) {
@@ -488,7 +501,7 @@ else if(m.t==="sb")sbl=m.l;
 /* ---------- player actions ---------- */
 function rs(cx,cy,cz,r){const lx=cx-O.x,ly=cy-O.y,lz=cz-O.z,t=lx*D.x+ly*D.y+lz*D.z;if(t<0)return -1;const d2=lx*lx+ly*ly+lz*lz-t*t;if(d2>r*r)return -1;return Math.max(0,t-Math.sqrt(r*r-d2))}
 function reload(){const w=WPN[cur];if(rel>0||sw>0||mag[cur]>=w.mag||res[cur]<=0||w.melee)return;rel=w.rl;snd(200,.1,"square",.05)}
-function swap(n){if(sw>0||(curGm==="arms"&&ws&&!wave))return;rel=0;if(cur!==4)lw=cur;cur=n>=0&&n<WPN.length?n:(cur+1)%WPN.length;sw=.35;vm.forEach((g,i)=>g.visible=i===cur);placeFm()}
+function swap(n){if(sw>0||(curGm==="arms"&&ws&&!wave))return;rel=0;pvw=cur;if(cur!==4)lw=cur;cur=n>=0&&n<WPN.length?n:(cur+1)%WPN.length;sw=.35;placeFm()}
 function shoot(){
 const w=WPN[cur];if(dead||cd>0||rel>0||sw>0)return;
 if(mag[cur]<=0){reload();return}
@@ -562,9 +575,16 @@ const mv=Math.hypot(P.vx,P.vz),bob=Math.sin(t*10)*Math.min(mv,7)/7,w=WPN[cur];
 let dip=0,tilt=0;if(rel>0){const f=rel/w.rl;dip=Math.sin(f*Math.PI)*.12;tilt=Math.sin(f*Math.PI)*.7}
 if(sw>0)dip+=Math.sin(Math.min(1,sw/.35)*Math.PI)*.25;
 vmw.visible=!dead&&st!=="menu"&&!scoped&&vmOn;
-vmw.position.set(.26+bob*.012,-.27+Math.abs(bob)*.015-dip,-.2+kick);vmw.rotation.set(kick*1.2+tilt,0,0);
+const vo=voff();vmw.position.set(.26+vo[0]+bob*.012,-.27+vo[1]+Math.abs(bob)*.015-dip,-.2+vo[2]+kick);vmw.rotation.set(kick*1.2+tilt,0,0);updHands();
 if(st==="menu")cam.position.set(0,10,0);else cam.position.set(P.x,dead?.35:eyeH+P.h,P.z);cam.rotation.set(dead?.3:pitch,yaw,0);
 }
+function handCols(){const a=myTm===0?0xd23a3a:myTm===1?0x3a6ad2:AGENTS[inv.agent%AGENTS.length][1];return a}
+function voff(){const vw=sw>.175?pvw:cur;return vw===0&&muzzleAnchor?VOFF_G:VOFF[vw]}
+function updHands(){const vw=sw>.175?pvw:cur;vm.forEach((g,i)=>g.visible=i===vw);
+const c=handCols();if(c!==hcK){hcK=c;HM.sl.color.setHex(c);HM.cf.color.setHex(((c>>16&255)*.7|0)<<16|((c>>8&255)*.7|0)<<8|((c&255)*.7|0))}
+const k=vw+(vw===0&&muzzleAnchor?"g":"b");if(k!==hkey){hkey=k;hb=vw===0&&muzzleAnchor?HANDS_G:HANDS[vw];armR.visible=!!hb.r;armL.visible=!!hb.l;if(hb.r)armR.position.set(hb.r[0],hb.r[1],hb.r[2]);if(hb.l)armL.position.set(hb.l[0],hb.l[1],hb.l[2])}
+if(hb.r)armR.position.z=hb.r[2]+kick*.5;
+if(hb.l){const f=rel>0?Math.sin(rel/WPN[cur].rl*Math.PI):0;armL.position.set(hb.l[0],hb.l[1]-.14*f,hb.l[2]+.42*f)}}
 function setT(id,s){const e=$(id);if(e._s!==s){e._s=s;e.textContent=s}}
 function hud(){
 if(mmOn&&t-mmT>.1){mmT=t;drawMM()}
@@ -595,7 +615,7 @@ const LAD=[3,1,0,2,4],GMK=["ffa","tdm","arms","ctf"],GMN={tdm:"КОМАНДЫ",a
 GMD={ffa:"Каждый сам за себя. Раунд 3 минуты.",tdm:"Красные против синих. Побеждает команда с большим числом убийств.",arms:"Оружие меняется за каждое убийство: пистолет, дробовик, винтовка, снайперка, нож. Убей ножом — победа.",ctf:"Укради флаг врага и принеси на свою базу (свой флаг должен быть на месте). До 3 захватов."};
 function setGm(g){gmode=g;sv("fps_gm",g);[...$("gms").children].forEach((b,i)=>b.className=GMK[i]===g?"on":"");$("gmd").textContent=GMD[g]}
 function gtxt(){return["💣"+gc,"💨"+gS,"✨"+gF].map((t,i)=>i===gk?"["+t+"]":t).join(" ")}
-function forceW(w){cur=w;rel=0;sw=.3;scoped=false;vm.forEach((g,i)=>g.visible=i===cur);placeFm();mag[cur]=WPN[cur].mag;res[cur]=WPN[cur].res}
+function forceW(w){pvw=cur;cur=w;rel=0;sw=.3;scoped=false;vm.forEach((g,i)=>g.visible=i===cur);placeFm();mag[cur]=WPN[cur].mag;res[cur]=WPN[cur].res}
 function setFlags(l){for(const o of fls)scene.remove(o);fls.length=0;fgs.length=0;flst=l||[];flst.forEach((f,i)=>{const col=i?0x3a6ad2:0xd23a3a,g=new THREE.Group(),pole=new THREE.Mesh(BG,bas(0xcfd5dc)),cl=new THREE.Mesh(BG,bas(col)),base=new THREE.Mesh(BG,bas(col));
 pole.scale.set(.08,2.4,.08);pole.position.y=1.2;cl.scale.set(.95,.55,.05);cl.position.set(.5,2.1,0);base.scale.set(1.8,.06,1.8);base.position.set(f.hx,.03,f.hz);g.add(pole,cl);g.userData.cl=cl;scene.add(g,base);fls.push(g,base);fgs.push(g)})}
 function smokeAt(x,y,z){for(let n=0;n<7;n++){const m=new THREE.Mesh(sgeo,new THREE.MeshBasicMaterial({color:0xb8bcc4,transparent:true,opacity:0,depthWrite:false}));m.position.set(x+rr(-1.4,1.4),y+rr(.4,1.6),z+rr(-1.4,1.4));m.scale.set(.1,.1,.1);scene.add(m);smokes.push({m,t:9,r:rr(1.6,2.6)})}snd(180,.25,"sawtooth",.05,-80)}

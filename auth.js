@@ -69,6 +69,25 @@ A.handle = async (req, res, path) => {
     if (path === "/api/top" && req.method === "GET") { out(res, 200, { top: await top() }); return true; }
     if (req.method !== "POST" && !(path === "/api/me" && req.method === "GET")) { out(res, 405, { error: "метод" }); return true; }
     const b = req.method === "POST" ? await body(req) : {};
+    if (path.startsWith("/api/admin/")) {   // админка: только по секретному ключу ADMIN_KEY из настроек сервера
+      const key = process.env.ADMIN_KEY || "";
+      if (key.length < 8) { out(res, 404, { error: "Админ-панель выключена на сервере (нет ADMIN_KEY)" }); return true; }
+      const g = Buffer.from(String(req.headers["x-admin-key"] || "")), k = Buffer.from(key);
+      if (!(g.length === k.length && crypto.timingSafeEqual(g, k))) { out(res, hit("admf:" + ip(req), 5, 6e5) ? 403 : 429, { error: "Неверный ключ" }); return true; }
+      const nm = String(b.name || "").trim().toLowerCase(), rec = nm ? await store.byKey(nm) : null;
+      if (!rec) { out(res, 404, { error: "Игрок не найден" }); return true; }
+      const t = await load(rec.id);
+      if (path === "/api/admin/lookup") { out(res, 200, { me: pub(t) }); return true; }
+      if (path === "/api/admin/give") {
+        const num = (v, m) => v == null || v === "" ? 0 : int(v, -m, m), c = num(b.coins, 1e6), f = num(b.free, 1000);
+        if (c === null || f === null || (c === 0 && f === 0)) { out(res, 400, { error: "Укажи монеты и/или ящики (число, можно со знаком −)" }); return true; }
+        t.d.coins = Math.max(0, t.d.coins + c); t.d.free = Math.max(0, t.d.free + f); mark(t); await flush();
+        console.log("ADMIN: игроку", t.name, "монеты", c, "ящики", f);
+        if (A.notify) A.notify(t);
+        out(res, 200, { me: pub(t) }); return true;
+      }
+      out(res, 404, { error: "нет такого" }); return true;
+    }
     if (path === "/api/register" || path === "/api/login") {
       const name = String(b.name || "").trim(), pass = String(b.pass || ""), key = name.toLowerCase();
       if (!NAME_RE.test(name)) { out(res, 400, { error: "Ник: 3–12 символов (буквы, цифры, _ . -)" }); return true; }

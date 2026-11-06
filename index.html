@@ -158,10 +158,10 @@ html.edt::after{content:"";position:fixed;inset:0;z-index:48;background:rgba(8,1
 #edt{position:fixed;inset:0;z-index:50;display:none;pointer-events:none}
 #edp{position:absolute;left:50%;top:6px;transform:translateX(-50%);background:rgba(0,0,0,.85);padding:8px 12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center;font-size:12px;border-radius:6px;pointer-events:auto;max-width:92vw}
 #acc{margin-top:6px;display:flex;gap:6px;flex-wrap:wrap}#acc .mini{padding:5px 8px;font-size:11px}#acc span{font-size:11px;opacity:.8;align-self:center}
-#au{position:fixed;inset:0;z-index:42;background:rgba(5,8,14,.9);display:none;align-items:center;justify-content:center}
-#aub{background:#141b29;border:1px solid rgba(255,255,255,.15);padding:14px 16px;width:min(92vw,340px);display:flex;flex-direction:column;gap:8px;text-align:left}
-#aub h3{margin:0;letter-spacing:1px}#aub input{padding:8px 10px;font:inherit;font-size:14px;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:4px;outline:0;width:100%;box-sizing:border-box;text-transform:none;letter-spacing:normal}
-#aue{color:#ff7a8a;font-size:12px;min-height:1.3em}#aub .rb{justify-content:flex-end}
+#au,#adm{position:fixed;inset:0;z-index:42;background:rgba(5,8,14,.9);display:none;align-items:center;justify-content:center}
+#aub,#admb{background:#141b29;border:1px solid rgba(255,255,255,.15);padding:14px 16px;width:min(92vw,340px);display:flex;flex-direction:column;gap:8px;text-align:left}
+#aub h3,#admb h3{margin:0;letter-spacing:1px}#aub input,#admb input{padding:8px 10px;font:inherit;font-size:14px;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:4px;outline:0;width:100%;box-sizing:border-box;text-transform:none;letter-spacing:normal}
+#aue,#ade{color:#ff7a8a;font-size:12px;min-height:1.3em}#ade.ok{color:#7fe08a}#aub .rb,#admb .rb{justify-content:flex-end}#admb .row input{min-width:0}
 #tpl{overflow-y:auto;flex:1;min-height:0}.tr{display:grid;grid-template-columns:34px 1fr 52px 96px 58px;gap:6px;padding:7px 8px;border-bottom:1px solid rgba(255,255,255,.07);font-size:13px;align-items:center;text-align:left}
 .tr.hd2{opacity:.6;font-size:11px;letter-spacing:1px}.tr.me{background:rgba(224,169,59,.14)}.tr b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#s-top.on{flex-direction:column;gap:8px}
 #tonesw{display:flex;gap:8px}#tonesw button{width:26px;height:26px;border:2px solid transparent;border-radius:50%;padding:0;cursor:pointer}#tonesw .on{border-color:#fff}
@@ -226,7 +226,7 @@ html.edt::after{content:"";position:fixed;inset:0;z-index:48;background:rgba(8,1
 <section class="sc" id="s-set">
 <div id="tabs"><button class="tb on" data-t="g" type="button">ИГРА</button><button class="tb" data-t="v" type="button">ВИДЕО</button><button class="tb" data-t="c" type="button">УПРАВЛЕНИЕ</button><button class="tb" data-t="a" type="button">ЗВУК</button></div>
 <div class="rows">
-<div class="tp on" id="tp-g"><div class="row2"><span>Мини-карта (радар)</span><div class="seg" id="sg-mm"></div></div><div class="row2"><span>Цвет кожи рук</span><div id="tonesw"></div></div><div class="row2"><span>Интерфейс</span><div class="seg" id="sg-ui"></div></div><div class="row2"><span>Вид рук и оружия</span><div class="seg" id="sg-vm"></div></div><div class="row2"><span>Профиль</span><button class="mini" id="rst" type="button">СБРОСИТЬ ПРОФИЛЬ</button></div></div>
+<div class="tp on" id="tp-g"><div class="row2"><span>Мини-карта (радар)</span><div class="seg" id="sg-mm"></div></div><div class="row2"><span>Цвет кожи рук</span><div id="tonesw"></div></div><div class="row2"><span>Интерфейс</span><div class="seg" id="sg-ui"></div></div><div class="row2"><span>Вид рук и оружия</span><div class="seg" id="sg-vm"></div></div><div class="row2"><span>Профиль</span><button class="mini" id="rst" type="button">СБРОСИТЬ ПРОФИЛЬ</button></div><div class="row2" id="admrow" style="display:none"><span>Админ-панель</span><button class="mini" id="admo" type="button">ОТКРЫТЬ</button></div></div>
 <div class="tp" id="tp-v"><div class="row2"><span>Качество графики</span><div class="seg" id="sg-q"></div></div><div class="row2"><span>Авто-качество (снижает разрешение при лагах)</span><div class="seg" id="sg-ad"></div></div><div class="row2"><span>Обводка оружия</span><div class="seg" id="sg-out"></div></div><div class="row2"><span>Счётчик FPS</span><div class="seg" id="sg-fps"></div></div><div class="row2"><span>Поле зрения: <b id="fvv"></b></span><input id="fv" type="range" min="60" max="100" step="1" value="75"></div></div>
 <div class="tp" id="tp-c"><div class="row2"><span>Чувствительность</span><input id="sn" type="range" min="0.4" max="2.5" step="0.1" value="1"></div><div class="row2"><span>Размер кнопок (телефон)</span><input id="bsz" type="range" min="0.8" max="1.4" step="0.05" value="1"></div><div class="row2"><span>Расстановка кнопок (телефон)</span><button class="mini" id="edo" type="button">ИЗМЕНИТЬ</button></div><pre id="helpTxt"></pre></div>
 <div class="tp" id="tp-a"><div class="row2"><span>Громкость</span><input id="vl" type="range" min="0" max="1" step="0.1" value="1"></div></div>
@@ -239,6 +239,7 @@ html.edt::after{content:"";position:fixed;inset:0;z-index:48;background:rgba(8,1
 <section class="sc" id="s-soon"><div><h2 id="soonT"></h2><p>Этот раздел появится в следующем обновлении.</p></div></section>
 </main>
 <div id="au"><div id="aub"><h3 id="aut">Вход</h3><div class="seg" id="aus"><button type="button" class="on" data-a="login">Вход</button><button type="button" data-a="reg">Регистрация</button></div><input id="aun" maxlength="12" placeholder="Ник (3–12 символов)" autocomplete="username"><input id="aup" type="password" maxlength="64" placeholder="Пароль (от 6 символов)" autocomplete="current-password"><div id="aue"></div><div class="rb"><button class="mini" id="auc" type="button">ОТМЕНА</button><button class="mini hi" id="aug" type="button">ВОЙТИ</button></div><p class="hint">Прогресс, монеты и скины хранятся на сервере. Без аккаунта играть тоже можно: данные остаются в этом браузере.</p></div></div>
+<div id="adm"><div id="admb"><h3>Админ-панель</h3><input id="adk" type="password" placeholder="Ключ админа" autocomplete="off"><input id="adn" maxlength="12" placeholder="Ник игрока" autocomplete="off"><div class="row"><input id="adc" type="number" inputmode="numeric" placeholder="Монеты (+/−)"><input id="adf" type="number" inputmode="numeric" placeholder="Ящики (+/−)"></div><div id="ade"></div><div class="rb"><button class="mini" id="adx" type="button">ЗАКРЫТЬ</button><button class="mini" id="adl" type="button">НАЙТИ</button><button class="mini hi" id="adg" type="button">ВЫДАТЬ</button></div><p class="hint">Ключ — это значение переменной ADMIN_KEY на сервере. Он хранится только до закрытия вкладки.</p></div></div>
 <div id="cs"><div id="csb"></div></div><div id="tst"></div>
 <div id="rot">Поверни телефон горизонтально 📱</div>
 </div>
@@ -657,6 +658,16 @@ function setAu(m){au.m=m;$("aut").textContent=m==="reg"?"Регистрация"
 const au={m:"login",busy:0};
 async function submitAu(){if(au.busy)return;const n=$("aun").value.trim(),p=$("aup").value;if(n.length<3){$("aue").textContent="Ник: от 3 символов";return}if(p.length<6){$("aue").textContent="Пароль: от 6 символов";return}
 au.busy=1;$("aug").disabled=true;$("aue").textContent="";try{const j=await api(au.m==="reg"?"/api/register":"/api/login",{name:n,pass:p});atok=j.token;sv("fps_at",atok);applyMe(j.me);$("au").style.display="none";toast("Добро пожаловать, "+j.me.name+"!")}catch(e){$("aue").textContent=e.message==="Failed to fetch"?"Нет связи с сервером":e.message}au.busy=0;$("aug").disabled=false}
+function admSay(t,good){const e=$("ade");e.textContent=t;e.className=good?"ok":""}
+async function admCall(path,body){const r=await fetch(path,{method:"POST",headers:{"Content-Type":"application/json","X-Admin-Key":$("adk").value},body:JSON.stringify(body)});let j={};try{j=await r.json()}catch(e){}if(!r.ok)throw new Error(r.status===404&&!j.error?"Админ-панель недоступна":j.error||"Ошибка "+r.status);return j}
+const admTxt=m=>m.name+": монет "+m.coins+", ящиков "+m.free+", уровень "+lvl(m.xp)[0]+", убийств "+m.k;
+async function admRun(path){const n=$("adn").value.trim();if(!$("adk").value){admSay("Введи ключ админа");return}if(!n){admSay("Введи ник игрока");return}
+try{sessionStorage.setItem("fps_ak",$("adk").value)}catch(e){}
+const body={name:n};if(path==="give"){body.coins=$("adc").value;body.free=$("adf").value}
+try{const j=await admCall("/api/admin/"+path,body);admSay((path==="give"?"Выдано. ":"")+admTxt(j.me),true);
+if(path==="give"){$("adc").value="";$("adf").value="";if(acct&&acct.name.toLowerCase()===n.toLowerCase()){try{applyMe((await api("/api/me")).me);if($("s-shop").classList.contains("on"))renderShop()}catch(e){}}}}
+catch(e){admSay(e.message==="Failed to fetch"?"Нет связи с сервером":e.message)}}
+function openAdm(){$("adm").style.display="flex";try{$("adk").value=sessionStorage.getItem("fps_ak")||""}catch(e){}admSay("")}
 async function logout(){try{await api("/api/logout",{})}catch(e){}atok="";sv("fps_at","");location.reload()}
 async function initAcct(){authUi();if(!atok)return;try{const j=await api("/api/me");applyMe(j.me)}catch(e){}}
 async function renderTop(){const b=$("tpl");b.innerHTML="";$("tpn").textContent="";try{const j=await api("/api/top");const h=document.createElement("div");h.className="tr hd2";["#","ИГРОК","УР.","УБИЛ / УМЕР","ВОЛНА"].forEach(t=>{const d=document.createElement("div");d.textContent=t;h.appendChild(d)});b.appendChild(h);
@@ -768,7 +779,8 @@ $("bsz").oninput=e=>{bs=+e.target.value;sv("fps_bs",bs);applyBs()};
 $("sok").onclick=()=>goScr("home");
 $("sdef").onclick=()=>{sens=1;vol=1;fovB=75;qual=2;uiM=0;vmOn=1;bs=1;fpsOn=0;mmOn=1;adOn=1;adS=1;outOn=1;tone=1;["fps_out","fps_tone","fps_mm","fps_ad","fps_fpsc","fps_sn","fps_vl","fps_fov","fps_q","fps_ui","fps_vm","fps_bs"].forEach(k=>{try{localStorage.removeItem(k)}catch(e){}});syncSet()};
 $("rst").onclick=()=>{if(acct){toast("У аккаунта сброса нет");return}if(confirm("Сбросить статистику, уровень, рекорд волн и инвентарь?")){stats={k:0,d:0,h:0,xp:0};wbest=0;svSt();sv("fps_wb",0);inv={coins:150,free:1,own:{},eq:{},agent:0};invFix();svInv();applySkins();renderLobby()}};
-$("helpTxt").textContent=HELP;syncSet();seg("gms",["Все против всех","Команды","Гонка вооружений","Захват флага"],()=>GMK.indexOf(gmode),i=>setGm(GMK[i]));setGm(gmode);setMode(mode);initEd();$("auc").onclick=()=>{$("au").style.display="none"};$("aug").onclick=submitAu;[...$("aus").children].forEach(b=>b.onclick=()=>setAu(b.dataset.a));initAcct();if(dbgOn)$("dbg").style.display="block";
+$("helpTxt").textContent=HELP;syncSet();seg("gms",["Все против всех","Команды","Гонка вооружений","Захват флага"],()=>GMK.indexOf(gmode),i=>setGm(GMK[i]));setGm(gmode);setMode(mode);initEd();if(/[?&]admin/.test(location.search||""))$("admrow").style.display="";$("admo").onclick=openAdm;$("adx").onclick=()=>{$("adm").style.display="none"};$("adl").onclick=()=>admRun("lookup");$("adg").onclick=()=>admRun("give");
+$("auc").onclick=()=>{$("au").style.display="none"};$("aug").onclick=submitAu;[...$("aus").children].forEach(b=>b.onclick=()=>setAu(b.dataset.a));initAcct();if(dbgOn)$("dbg").style.display="block";
 const cc=$("chv");cc.onpointerdown=e=>{chD=1;chX=e.clientX;chI=performance.now();try{cc.setPointerCapture(e.pointerId)}catch(x){}};
 cc.onpointermove=e=>{if(!chD)return;chA+=(e.clientX-chX)*.012;chX=e.clientX;chI=performance.now()};
 cc.onpointerup=cc.onpointercancel=()=>{chD=0;chI=performance.now()};
@@ -794,6 +806,7 @@ addEventListener("pointerup",e=>{if(e.pointerType==="mouse"){if(e.button===2)sco
 cv.addEventListener("contextmenu",e=>e.preventDefault());
 addEventListener("keydown",e=>{
 if(e.target&&e.target.id==="ci"){if(e.code==="Enter"){const v=e.target.value.trim();if(v)send({t:"c",x:v});closeChat()}else if(e.code==="Escape")closeChat();return}
+if(e.target&&e.target.closest&&e.target.closest("#adm"))return;
 if(e.target&&(e.target.id==="aun"||e.target.id==="aup")){if(e.code==="Enter")submitAu();return}
 if(e.target&&(e.target.id==="nm"||e.target.id==="rk")){if(e.code==="Enter")begin();return}
 keys[e.code]=true;

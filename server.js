@@ -3,6 +3,7 @@ const http = require("http"), fs = require("fs"), path = require("path");
 const { WebSocketServer } = require("ws");
 const GM = require("./maps.js"), MP = GM.MAPS, WPN = GM.WPN, GRN = GM.GRN;
 const A = require("./auth.js");   // аккаунты (работают только при DATABASE_URL)
+A.notify = acc => { for (const q of pl.values()) if (q.acc && q.acc.id === acc.id) send(q.ws, { t: "prof", p: A.pub(acc) }); };   // игрок видит выданное сразу
 const PORT = process.env.PORT || 3000, MAX = 12, NM = MP.length, RND = 180000, BRK = 8000;
 const page = fs.readFileSync(path.join(__dirname, "index.html"));
 const mapsJs = fs.readFileSync(path.join(__dirname, "maps.js"));

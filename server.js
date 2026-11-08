@@ -9,7 +9,7 @@ const page = fs.readFileSync(path.join(__dirname, "index.html"));
 const mapsJs = fs.readFileSync(path.join(__dirname, "maps.js"));
 const pl = new Map(), OB = MP.map((_, i) => GM.genObs(i)), ROOMS = new Map(), ghosts = new Map();
 let nid = 1;
-const LAD = [3, 1, 0, 2, 4], GMS = ["ffa", "tdm", "arms", "ctf"];   // лестница «Гонки вооружений»: пистолет, дробовик, винтовка, снайперка, нож
+const LAD = [3, 1, 0, 2, 4], GMS = ["ffa", "tdm", "arms", "ctf", "bomb"];   // лестница «Гонки вооружений»: пистолет, дробовик, винтовка, снайперка, нож
 const types = { ".glb": "model/gltf-binary", ".gltf": "model/gltf+json", ".bin": "application/octet-stream" };
 
 /* ---------- rooms: "0".."3" — публичные (все против всех), "P<КОД>" — приватные (команды) ---------- */
@@ -31,9 +31,95 @@ const mkFl = i => {   // базы и флаги: красные слева, си
   });
 };
 const flOut = R => R.fl.map(f => ({ x: f.x, z: f.z, hx: f.hx, hz: f.hz, c: f.c, d: f.d }));
+/* ---------- режим «Бомба»: раунды без респавна, закупка, закладка/обезвреживание ---------- */
+const BM = GM.BOMB, ITEMS = GM.ITEMS, PRIM = GM.PRIM, KILLR = GM.KILL;
+const BOMB_AT = { id: 0, n: "💣 Бомба", k: 0, tm: -2, ws: null, acc: null };   // «убийца» при взрыве
+function mkSites(mi) {   // два пункта закладки A (z<0) и B (z>0) на свободных местах карты
+  const A = MP[mi].A, ok = (x, z) => free(mi, x, z) && [[3, 0], [-3, 0], [0, 3], [0, -3]].every(d => free(mi, x + d[0], z + d[1]));
+  return [-1, 1].map(sg => {
+    const zc = sg * A * 0.55;
+    for (const dx of [0, 3, -3, 6, -6, 9, -9, 12, -12]) for (const dz of [0, 3, -3, 6, -6]) { const x = dx, z = zc + dz; if (Math.abs(z) < A - 4 && ok(x, z)) return { x, z }; }
+    return { x: 0, z: sg * A * 0.5 };
+  });
+}
+const noBm = () => ({ st: "none", c: 0, x: 0, z: 0, site: -1, t: 0 });
+const mkBomb = mi => ({ ph: "wait", end: 0, rn: 0, sc: [0, 0], ls: [0, 0], sites: mkSites(mi), bm: noBm(), planted: 0, over: 0, ls1: -1 });
+const bsOut = R => { const b = R.b; return { ph: b.ph, rn: b.rn, sc: b.sc, wins: BM.WINS, sites: b.sites.map(s => [s.x, s.z]), bm: { st: b.bm.st, x: b.bm.x, z: b.bm.z, site: b.bm.site } }; };
+const bsend = R => room(R.k, Object.assign({ t: "bs" }, bsOut(R)));
+const sendOwn = p => { const R = ROOMS.get(p.m); if (R && R.b) send(p.ws, { t: "own", w: p.own, g: p.g, ar: Math.round(p.ar), hl: p.hl, kit: p.kit, mo: p.mo, b: R.b.bm.st === "carried" && R.b.bm.c === p.id ? 1 : 0 }); };
+const resetLoad = p => { p.own = [3, 4]; p.g = [0, 0, 0]; p.ar = 0; p.hl = 0; p.kit = 0; };
+const addMo = (p, v) => { p.mo = Math.min(BM.CAP, p.mo + v); };
+function dropBomb(R, p) { const bm = R.b.bm; if (bm.st === "carried" && bm.c === p.id) { bm.st = "dropped"; bm.c = 0; bm.x = p.x; bm.z = p.z; bsend(R); sendOwn(p); } }
+function startRound(R, ps) {
+  const b = R.b, now = Date.now(), ts = ps.filter(q => q.tm === 0);
+  if (b.over) { b.over = 0; b.sc = [0, 0]; b.ls = [0, 0]; b.rn = 0; for (const q of ps) { q.mo = BM.MONEY0; resetLoad(q); } }
+  b.rn++; b.ph = "buy"; b.end = now + BM.BUY; b.planted = 0; b.bm = noBm();
+  if (ts.length) { b.bm.st = "carried"; b.bm.c = ts[Math.floor(Math.random() * ts.length)].id; }
+  for (const q of ps) {
+    q.a = true; q.hp = 100; q.inv = now + BM.BUY; q.act = null;
+    send(q.ws, { t: "resp" }); room(R.k, { t: "alive", id: q.id }, q.ws);
+  }
+  bsend(R);
+  for (const q of ps) sendOwn(q);
+  sb(R.k);
+}
+function endRound(R, w, why, ps) {
+  const b = R.b, now = Date.now();
+  if (b.ph !== "live") return;
+  b.ph = "post"; b.sc[w]++;
+  b.over = b.sc[w] >= BM.WINS ? 1 : 0; b.end = now + (b.over ? 8000 : BM.POST);
+  const lb = BM.LOSS + BM.STEP * Math.min(b.ls[1 - w], 4);   // бонус за серию поражений
+  b.ls[1 - w]++; b.ls[w] = Math.max(0, b.ls[w] - 1);
+  for (const q of ps) {
+    let rw = q.tm === w ? BM.WIN : lb;
+    if (q.tm === 0 && w === 1 && b.planted) rw += BM.PLT;
+    addMo(q, rw); q.act = null;
+    send(q.ws, { t: "rend", w, why, rw, sc: b.sc, m: b.over });
+  }
+  bsend(R);
+  for (const q of ps) sendOwn(q);
+}
+function bombTick(R) {
+  const b = R.b, now = Date.now(), ps = inRoom(R.k), T = ps.filter(q => q.tm === 0), C = ps.filter(q => q.tm === 1);
+  if (b.ph === "wait") { if (T.length && C.length) startRound(R, ps); }
+  else if (!T.length || !C.length) {   // одна из команд опустела — разминка до прихода игроков
+    b.ph = "wait"; b.end = 0; b.bm = noBm(); b.planted = 0;
+    for (const q of ps) { q.a = true; q.hp = 100; q.inv = now + 1500; q.act = null; send(q.ws, { t: "resp" }); room(R.k, { t: "alive", id: q.id }, q.ws); }
+    bsend(R);
+  }
+  else if (b.ph === "buy") { if (now >= b.end) { b.ph = "live"; b.end = now + BM.LIVE; bsend(R); } }
+  else if (b.ph === "post") { if (now >= b.end) startRound(R, ps); }
+  else if (b.ph === "live") {
+    for (const q of ps) {   // удержание E: закладка / обезвреживание
+      const ac = q.act, bm = b.bm;
+      if (!ac || b.ph !== "live") continue;
+      const ok = q.a && Math.hypot(q.x - ac.px, q.z - ac.pz) < 0.9 && (ac.k === "plant" ? bm.st === "carried" && bm.c === q.id : bm.st === "planted");
+      if (!ok) { q.act = null; send(q.ws, { t: "pr", p: -1 }); continue; }
+      const pr = (now - ac.t0) / (ac.k === "plant" ? BM.PLANT : q.kit ? BM.DEFK : BM.DEF);
+      if (pr < 1) { send(q.ws, { t: "pr", p: Math.round(pr * 100) / 100, k: ac.k }); continue; }
+      q.act = null; send(q.ws, { t: "pr", p: -1 });
+      if (ac.k === "plant") { bm.st = "planted"; bm.c = 0; bm.x = ac.px; bm.z = ac.pz; bm.site = ac.site; bm.t = now + BM.FUSE; b.planted = 1; b.end = bm.t; addMo(q, BM.PLB); bsend(R); sendOwn(q); }
+      else { bm.st = "defused"; addMo(q, BM.DEFB); sendOwn(q); endRound(R, 1, "def", ps); }
+    }
+    if (b.ph === "live" && b.bm.st === "planted" && now >= b.bm.t) {   // взрыв
+      const bm = b.bm; bm.st = "boom";
+      for (const q of ps) if (q.a) { const d = Math.hypot(q.x - bm.x, q.z - bm.z); if (d < 16) { q.inv = 0; hurt(q, BOMB_AT, 700 * (1 - d / 16), false, -2); } }
+      room(R.k, { t: "boom", x: bm.x, z: bm.z });
+      endRound(R, 0, "boom", ps);
+    }
+    if (b.ph === "live") {
+      const aT = T.filter(q => q.a).length, aC = C.filter(q => q.a).length, pln = b.bm.st === "planted";
+      if (!aC) endRound(R, 0, "elim", ps);
+      else if (!aT && !pln) endRound(R, 1, "elim", ps);
+      else if (!pln && now >= b.end) endRound(R, 1, "time", ps);
+    }
+  }
+  const sec = b.ph === "wait" ? 0 : Math.max(0, Math.ceil((b.end - now) / 1000));
+  if (sec !== b.ls1) { b.ls1 = sec; room(R.k, { t: "tm", s: sec }); }
+}
 const getRoom = (k, mi, team, gm) => {
   let r = ROOMS.get(k);
-  if (!r) { r = { k, mi, team, gm: gm || "ffa", rd: { end: Date.now() + RND, brk: 0 }, pk: mkPk(mi), idle: Date.now(), fl: gm === "ctf" ? mkFl(mi) : null, ts: [0, 0], win: 0 }; ROOMS.set(k, r); }
+  if (!r) { r = { k, mi, team, gm: gm || "ffa", rd: { end: Date.now() + RND, brk: 0 }, pk: mkPk(mi), idle: Date.now(), fl: gm === "ctf" ? mkFl(mi) : null, ts: [0, 0], win: 0, b: gm === "bomb" ? mkBomb(mi) : null }; ROOMS.set(k, r); }
   return r;
 };
 for (let i = 0; i < NM; i++) getRoom(String(i), i, false, "ffa");
@@ -86,13 +172,19 @@ const num = (v, m) => Math.max(-m, Math.min(m, +v || 0));
 
 /* ---------- урон: единственное место, где меняется HP ---------- */
 function hurt(tg, at, d, hs, wi) {
-  const R = ROOMS.get(tg.m);
+  const R = ROOMS.get(tg.m), B = R.b;
   if (!tg.a || tg.inv > Date.now() || R.rd.brk) return;
+  if (B && B.ph !== "live" && B.ph !== "wait") return;   // в закупку и перерыв урона нет
   if (R.team && tg !== at && tg.tm === at.tm) return;   // по своим не бьём
+  if (B && tg.ar > 0 && (!hs || tg.hl)) { const ab = d * 0.5; tg.ar = Math.max(0, tg.ar - ab); d -= ab; }   // броня гасит половину урона (шлем — и от хедшота)
   tg.hp -= d;
-  send(tg.ws, { t: "hp", hp: Math.max(0, Math.round(tg.hp)), f: at.id });
+  send(tg.ws, { t: "hp", hp: Math.max(0, Math.round(tg.hp)), f: at.id, ar: Math.round(tg.ar | 0) });
   if (tg.hp > 0) return;
   tg.a = false; at.k++; tg.d++;
+  if (B) {
+    if (at !== tg && at !== BOMB_AT && at.tm !== tg.tm) { addMo(at, KILLR[wi] === undefined ? 300 : KILLR[wi]); sendOwn(at); }
+    resetLoad(tg); tg.act = null; dropBomb(R, tg);
+  }
   if (at.acc && at !== tg) { const up = A.kill(at.acc, tg.acc ? "a" + tg.acc.id : "g" + tg.id, hs); send(at.ws, { t: "prof", p: A.pub(at.acc), up }); }   // награду выдаёт только сервер
   if (tg.acc) { A.death(tg.acc); send(tg.ws, { t: "prof", p: A.pub(tg.acc) }); }
   if (R.gm === "arms") {
@@ -104,6 +196,7 @@ function hurt(tg, at, d, hs, wi) {
   sb(tg.m);
   setTimeout(() => {
     if (tg.a || !pl.has(tg.ws)) return;
+    if (R.b && R.b.ph !== "wait") return;   // в раундах «Бомбы» воскрешение только в начале следующего
     tg.hp = 100; tg.a = true; tg.inv = Date.now() + 2000;
     send(tg.ws, { t: "resp" });
     room(tg.m, { t: "alive", id: tg.id }, tg.ws);
@@ -117,6 +210,7 @@ setInterval(() => {
     const rd = R.rd, ps = inRoom(k);
     if (!ps.length) { rd.end = now + RND; rd.brk = 0; if (k[0] === "P" && now - R.idle > 10000) ROOMS.delete(k); continue; }
     R.idle = now;
+    if (R.b) continue;
     if (R.fl) R.fl.forEach((f, i) => { if (f.d && now - f.dt > 15000) { f.x = f.hx; f.z = f.hz; f.d = 0; flMsg(R, i); } });
     if (rd.brk) {
       if (now > rd.brk) {
@@ -136,10 +230,18 @@ setInterval(() => {
   for (const [t, g] of ghosts) if (now - g.t > 30000) ghosts.delete(t);
 }, 1000);
 
+setInterval(() => {
+  for (const R of ROOMS.values()) {
+    if (!R.b) continue;
+    if (!inRoom(R.k).length) { if (R.b.rn || R.b.ph !== "wait") R.b = mkBomb(R.mi); continue; }
+    try { bombTick(R); } catch (e) { console.error("bomb:", e); }
+  }
+}, 200);
+
 /* ---------- соединения ---------- */
 wss.on("connection", ws => {
   if (pl.size >= MAX * 40) { ws.close(); return; }
-  const p = { id: nid++, n: "Игрок", m: "0", hp: 100, k: 0, d: 0, a: true, j: false, lh: {}, x: 0, y: 0, z: 0, inv: 0, tm: -1, ct: 0, gt: 0, al: 0, tok: "", ws };
+  const p = { id: nid++, n: "Игрок", m: "0", hp: 100, k: 0, d: 0, a: true, j: false, lh: {}, x: 0, y: 0, z: 0, inv: 0, tm: -1, ct: 0, gt: 0, al: 0, tok: "", ws, own: [3, 4], g: [0, 0, 0], ar: 0, hl: 0, kit: 0, mo: BM.MONEY0, act: null };
   pl.set(ws, p);
   ws.isAlive = true;
   ws.on("pong", () => { ws.isAlive = true; });
@@ -159,7 +261,7 @@ wss.on("connection", ws => {
     if (m.t === "join" && !p.j) {
       const code = String(m.rk || "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6);
       const mi = Math.max(0, Math.min(NM - 1, Math.floor(+m.m || 0))), gm0 = GMS.includes(m.gm) ? m.gm : (code ? "tdm" : "ffa"), key = code ? "P" + code : gm0 === "ffa" ? String(mi) : "G" + gm0 + mi;
-      const R = getRoom(key, mi, gm0 === "tdm" || gm0 === "ctf", gm0), ps = inRoom(key);
+      const R = getRoom(key, mi, gm0 === "tdm" || gm0 === "ctf" || gm0 === "bomb", gm0), ps = inRoom(key);
       if (ps.length >= MAX) { ws.close(); return; }
       p.m = key;
       p.n = String(m.n || "Игрок").replace(/[<>&]/g, "").slice(0, 12) || "Игрок";
@@ -169,8 +271,10 @@ wss.on("connection", ws => {
       if (g && g.m === key && now - g.t < 30000) { p.k = g.k; p.d = g.d; p.tm = g.tm; p.al = g.al | 0; }
       else p.tm = R.team ? (ps.filter(q => q.tm === 0).length <= ps.filter(q => q.tm === 1).length ? 0 : 1) : -1;
       ghosts.delete(p.tok);
+      if (R.b) { p.mo = BM.MONEY0; resetLoad(p); if (R.b.ph === "live" || R.b.ph === "post") p.a = false; }   // зашёл посреди раунда — ждёт следующего
       p.j = true; p.inv = now + 2000;
-      send(ws, { t: "hello", id: p.id, tm: p.tm, mi: R.mi, rk: code, gm: R.gm, al: p.al | 0, ts: R.ts, fl: R.fl ? flOut(R) : null, p: ps.map(q => ({ id: q.id, n: q.n, a: q.a, tm: q.tm })), pk: R.pk.map(k => [k.x, k.z, k.k, k.on ? 1 : 0]), s: Math.ceil(Math.max(0, R.rd.end - now) / 1000) });
+      send(ws, { t: "hello", id: p.id, tm: p.tm, mi: R.mi, rk: code, gm: R.gm, al: p.al | 0, ts: R.ts, fl: R.fl ? flOut(R) : null, p: ps.map(q => ({ id: q.id, n: q.n, a: q.a, tm: q.tm })), pk: R.pk.map(k => [k.x, k.z, k.k, k.on ? 1 : 0]), s: R.b ? (R.b.ph === "wait" ? 0 : Math.ceil(Math.max(0, R.b.end - now) / 1000)) : Math.ceil(Math.max(0, R.rd.end - now) / 1000), bs: R.b ? bsOut(R) : null });
+      if (R.b) { sendOwn(p); if (!p.a) send(ws, { t: "spec" }); }
       if (p.acc) send(ws, { t: "prof", p: A.pub(p.acc) });
       room(key, { t: "j", id: p.id, n: p.n, tm: p.tm }, ws);
       sb(key);
@@ -181,6 +285,7 @@ wss.on("connection", ws => {
       room(p.m, { t: "s", id: p.id, x: p.x, y: p.y, z: p.z, yaw: num(m.yaw, 50), c: m.c ? 1 : 0 }, ws);
       const R = ROOMS.get(p.m);
       if (R.fl) ctfStep(R, p);
+      if (R.b && R.b.bm.st === "dropped" && p.tm === 0 && R.b.ph === "live" && Math.hypot(R.b.bm.x - p.x, R.b.bm.z - p.z) < 1.6) { R.b.bm.st = "carried"; R.b.bm.c = p.id; bsend(R); sendOwn(p); }
       R.pk.forEach((k, i) => {
         if (!k.on || Math.hypot(k.x - p.x, k.z - p.z) > 1.3 || (k.k === "h" && p.hp >= 100)) return;
         k.on = false;
@@ -195,11 +300,36 @@ wss.on("connection", ws => {
       if (!x || now - p.ct < 700) return;
       p.ct = now; room(p.m, { t: "c", id: p.id, n: p.n, x, tm: p.tm });
     } else if (m.t === "gr" && p.a && ROOMS.get(p.m).gm !== "arms" && now - p.gt >= GRN.rate * 700 && Array.isArray(m.o) && Array.isArray(m.v) && m.o.length === 3 && m.v.length === 3) {
+      const Rg = ROOMS.get(p.m), kg = (m.k | 0) % 3;
+      if (Rg.b) { if ((Rg.b.ph !== "live" && Rg.b.ph !== "wait") || !(p.g[kg] > 0)) return; p.g[kg]--; }   // в «Бомбе» гранаты только купленные
       p.gt = now;
       room(p.m, { t: "gr", id: p.id, o: m.o.map(v => num(v, 60)), v: m.v.map(v => num(v, 30)), k: (m.k | 0) % 3 }, ws);
+    } else if (m.t === "buy") {
+      const R = ROOMS.get(p.m), it = ITEMS[m.i];
+      if (!R.b || !it || !p.a || (R.b.ph !== "buy" && R.b.ph !== "wait")) return;
+      const id = m.i, pr = GM.price(id, p);
+      if (p.mo < pr) return;
+      if (it.w !== undefined) { if (p.own.includes(it.w)) return; p.own = p.own.filter(w => !PRIM.includes(w)); p.own.push(it.w); }
+      else if (id === "kev") { if (p.ar >= 100) return; p.ar = 100; }
+      else if (id === "kevh") { if (p.ar >= 100 && p.hl) return; p.ar = 100; p.hl = 1; }
+      else if (it.g !== undefined) { if (p.g[it.g] >= it.max) return; p.g[it.g]++; }
+      else if (id === "kit") { if (p.tm !== 1 || p.kit) return; p.kit = 1; }
+      p.mo -= pr; sendOwn(p);
+    } else if (m.t === "act") {
+      const R = ROOMS.get(p.m);
+      if (!R.b) return;
+      if (!m.on) { if (p.act) { p.act = null; send(ws, { t: "pr", p: -1 }); } return; }
+      const b = R.b, bm = b.bm;
+      if (b.ph !== "live" || !p.a || p.act) return;
+      if (p.tm === 0 && bm.st === "carried" && bm.c === p.id) {
+        const i = b.sites.findIndex(s => Math.hypot(s.x - p.x, s.z - p.z) < 3);
+        if (i >= 0) p.act = { k: "plant", t0: now, site: i, px: p.x, pz: p.z };
+      } else if (p.tm === 1 && bm.st === "planted" && Math.hypot(bm.x - p.x, bm.z - p.z) < 2.4) p.act = { k: "defuse", t0: now, site: bm.site, px: p.x, pz: p.z };
     } else if (m.t === "hit" && p.a && Array.isArray(m.h) && !ROOMS.get(p.m).rd.brk) {
       // Сервер сам знает оружие: лимит скорострельности, дальность и максимум урона берутся из таблиц WPN/GRN.
       const gw = m.w === -1, wi = gw ? -1 : m.w | 0, w = gw ? GRN : WPN[wi];
+      const Rh = ROOMS.get(p.m);
+      if (Rh.b && ((Rh.b.ph !== "live" && Rh.b.ph !== "wait") || (!gw && !p.own.includes(wi)))) return;   // стрелять можно только купленным
       if (!w || now - (p.lh[wi] || 0) < w.rate * 700) return;
       if (ROOMS.get(p.m).gm === "arms" && (gw || wi !== LAD[p.al | 0])) return;   // в гонке вооружений бьёт только оружие текущего уровня
       if (gw && (!p.gt || now - p.gt > 6000)) return;   // граната: только в течение 6 с после броска, один взрыв на бросок
@@ -217,6 +347,7 @@ wss.on("connection", ws => {
     pl.delete(ws);
     if (p.j) {
       dropFlag(ROOMS.get(p.m), p);
+      { const Rc = ROOMS.get(p.m); if (Rc && Rc.b) dropBomb(Rc, p); }
       if (p.tok) ghosts.set(p.tok, { m: p.m, k: p.k, d: p.d, tm: p.tm, al: p.al, t: Date.now() });
       room(p.m, { t: "l", id: p.id }); sb(p.m);
     }

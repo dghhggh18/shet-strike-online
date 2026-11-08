@@ -34,5 +34,9 @@ const lvl=xp=>{xp=Math.max(0,Math.min(+xp||0,1e9));let l=1,n=100+l*40;while(xp>=
 const reward=L=>({c:20+L*5,f:L%3===0?1:0});
 const roll=(t,rnd)=>{const w=CASES[t].w;let x=rnd()*w.reduce((a,b)=>a+b,0),r=0;for(;r<3;r++){if(x<w[r])break;x-=w[r]}const p=CAT.filter(s=>!s.d&&s.r===r);return p[Math.min(p.length-1,Math.floor(rnd()*p.length))]};
 return{WN,DUP,PAL,AGENTS,CASES,SK,CAT,lvl,reward,roll}})();
-g.GM={MAPS,WPN,GRN,SHOP,mkSr,genObs};if(typeof module!=="undefined")module.exports=g.GM;
+const BOMB={BUY:15000,LIVE:115000,POST:6000,FUSE:40000,PLANT:3200,DEF:10000,DEFK:5000,WINS:8,MONEY0:800,CAP:16000,WIN:3250,LOSS:1400,STEP:500,PLB:300,DEFB:300,PLT:800};   // режим «Бомба»: тайминги (мс) и экономика
+const PRIM=[0,1,2,5,6],KILL=[300,900,100,300,1500,600,300];   // слоты основного оружия; награда за убийство по индексу оружия
+const ITEMS={rifle:{n:"Винтовка",p:2700,w:0},shot:{n:"Дробовик",p:1100,w:1},snip:{n:"Снайперка",p:4750,w:2},smg:{n:"ПП",p:1200,w:5},sil:{n:"Тихий",p:2000,w:6},kev:{n:"Броня",p:650},kevh:{n:"Броня + шлем",p:1000},frag:{n:"Осколочная",p:300,g:0,max:1},smoke:{n:"Дымовая",p:300,g:1,max:1},flash:{n:"Светошумовая",p:200,g:2,max:2},kit:{n:"Набор сапёра",p:400}};
+const price=(id,s)=>id==="kevh"&&s.ar>=100&&!s.hl?350:ITEMS[id].p;
+g.GM={MAPS,WPN,GRN,SHOP,mkSr,genObs,BOMB,PRIM,KILL,ITEMS,price};if(typeof module!=="undefined")module.exports=g.GM;
 })(typeof window!=="undefined"?window:globalThis);

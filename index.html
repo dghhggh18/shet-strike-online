@@ -653,11 +653,12 @@ if(bm&&(bm.st==="dropped"||bm.st==="planted")){if(!bmM){bmM=new THREE.Mesh(BG,ne
 buyUi()}
 function mkBombUi(){if($("bh"))return;
 const mk=(tag,id,css)=>{const e=document.createElement(tag);e.id=id;e.style.cssText=css;document.body.appendChild(e);return e};
-mk("div","bh","position:fixed;right:10px;top:40%;z-index:30;color:#fff;font:700 14px system-ui;text-shadow:0 1px 3px #000;text-align:right;white-space:pre;pointer-events:none");
+mk("div","bh","position:fixed;left:50%;top:52%;transform:translateX(-50%);z-index:30;color:#fff;font:700 13px system-ui;text-shadow:0 1px 3px #000;text-align:center;white-space:pre;pointer-events:none");
 const pg=mk("div","bpg","position:fixed;left:50%;bottom:24%;transform:translateX(-50%);width:230px;z-index:30;display:none;color:#fff;font:700 13px system-ui;text-align:center;text-shadow:0 1px 3px #000;pointer-events:none");
 pg.innerHTML='<div id="bpt"></div><div style="height:9px;background:#0009;margin-top:4px"><i id="bpf" style="display:block;height:100%;width:0;background:#ffd23d"></i></div>';
 const ab=mk("button","bab","position:fixed;right:18px;bottom:36%;z-index:31;display:none;padding:14px 16px;font:800 14px system-ui;background:#ffd23d;color:#111;border:0;border-radius:10px");ab.type="button";
 ab.addEventListener("touchstart",e=>{e.preventDefault();setAct(true)},{passive:false});ab.addEventListener("touchend",e=>{e.preventDefault();setAct(false)},{passive:false});ab.addEventListener("mousedown",()=>setAct(true));ab.addEventListener("mouseup",()=>setAct(false));
+const sb=mk("button","bsh","position:fixed;left:18%;top:28%;z-index:31;display:none;padding:12px 14px;font:800 20px system-ui;background:#3a5ab0;color:#fff;border:0;border-radius:50%");sb.type="button";sb.textContent="🛒";sb.addEventListener("click",()=>{buyOpen=!buyOpen;buyUi()});
 const by=mk("div","by","position:fixed;left:10px;top:12%;z-index:32;display:none;width:min(260px,70vw);max-height:76vh;overflow:auto;background:rgba(8,12,24,.88);border:1px solid #3a4a7a;padding:10px;color:#fff;font:600 13px system-ui");
 by.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("button[data-i]");if(b&&!b.disabled)send({t:"buy",i:b.dataset.i})})}
 function buyUi(){const by=$("by");if(!by||!bo)return;
@@ -666,14 +667,14 @@ BORD.forEach((id,i)=>{const it=GM.ITEMS[id],p=bprice(id),dis=mo<p||(id==="kit"&&
 h+='<button type="button" data-i="'+id+'"'+(dis?" disabled":"")+' style="display:block;width:100%;text-align:left;margin:3px 0;padding:7px 8px;background:'+(dis?"#232a3c":"#3a5ab0")+';color:#fff;border:0;font:inherit;opacity:'+(dis?.5:1)+'">['+(BKEY[i]==="KeyK"?"K":BKEY[i].slice(5))+'] '+it.n+' <b style="float:right">$'+p+'</b></button>'});
 by.innerHTML=h}
 function bombHud(){
-if(curGm!=="bomb"||!bo||st!=="play"){if(bhOn){bhOn=false;for(const id of["bh","bpg","bab","by"]){const e=$(id);if(e)e.style.display="none"}}return}
+if(curGm!=="bomb"||!bo||st!=="play"){if(bhOn){bhOn=false;for(const id of["bh","bpg","bab","by","bsh"]){const e=$(id);if(e)e.style.display="none"}}return}
 mkBombUi();bhOn=true;
-setT("bh",(myTm===0?"🔴 ТЕРРОРИСТ":myTm===1?"🔵 СПЕЦНАЗ":"")+"\n💰 $"+mo+"\n🛡 "+Math.round(arm)+(hlN?" +шлем":"")+(kitN?"\n🔧 набор сапёра":"")+(hasBm?"\n💣 БОМБА У ТЕБЯ"+(bo.ph==="live"?"\nуд. E на A/B":""):""));
+setT("bh",(myTm===0?"🔴 ТЕРРОРИСТ":myTm===1?"🔵 СПЕЦНАЗ":"")+" · 💰$"+mo+" · 🛡"+Math.round(arm)+(hlN?"+шлем":"")+(kitN?" · 🔧":"")+(hasBm?"\n💣 БОМБА У ТЕБЯ"+(bo.ph==="live"?" — заложи на A/B":""):""));
 $("bh").style.display="";
 const pg=$("bpg"),sh=prog>=0&&!dead;pg.style.display=sh?"block":"none";if(sh){setT("bpt",progK==="plant"?"Закладка бомбы…":"Обезвреживание…");$("bpf").style.width=Math.round(prog*100)+"%"}
 const na=nearAct(),ab=$("bab");ab.style.display=na?"block":"none";if(na)setT("bab",na==="plant"?"ЗАЛОЖИТЬ (E)":"ОБЕЗВРЕДИТЬ (E)");
 if(bmM&&bo.bm.st==="planted")bmM.material.color.setHex((t*4|0)%2?0xff2020:0x552020);
-$("by").style.display=buyOpen&&!dead?"block":"none"}
+$("by").style.display=buyOpen&&!dead?"block":"none";$("bsh").style.display=(bo.ph==="buy"||bo.ph==="wait")&&!dead?"block":"none"}
 addEventListener("keydown",e=>{if(curGm!=="bomb"||!bo||st!=="play"||e.repeat)return;const tg=e.target;if(tg&&(tg.tagName==="INPUT"||tg.tagName==="TEXTAREA"))return;
 if(e.code==="KeyE")setAct(true);
 else if(e.code==="KeyB"&&(bo.ph==="buy"||bo.ph==="wait")){buyOpen=!buyOpen;buyUi()}

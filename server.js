@@ -51,7 +51,13 @@ const resetLoad = p => { p.own = [3, 4]; p.g = [0, 0, 0]; p.ar = 0; p.hl = 0; p.
 const addMo = (p, v) => { p.mo = Math.min(BM.CAP, p.mo + v); };
 function dropBomb(R, p) { const bm = R.b.bm; if (bm.st === "carried" && bm.c === p.id) { bm.st = "dropped"; bm.c = 0; bm.x = p.x; bm.z = p.z; bsend(R); sendOwn(p); } }
 function startRound(R, ps) {
-  const b = R.b, now = Date.now(), ts = ps.filter(q => q.tm === 0);
+  const b = R.b, now = Date.now();
+  if (b.rn === BM.HALF && !b.over) {   // смена сторон на середине матча: деньги и снаряжение обнуляются
+    for (const q of ps) { q.tm = 1 - q.tm; q.mo = BM.MONEY0; resetLoad(q); }
+    b.sc = [b.sc[1], b.sc[0]]; b.ls = [b.ls[1], b.ls[0]];
+    room(R.k, { t: "swap", l: ps.map(q => [q.id, q.tm]) });
+  }
+  const ts = ps.filter(q => q.tm === 0);
   if (b.over) { b.over = 0; b.sc = [0, 0]; b.ls = [0, 0]; b.rn = 0; for (const q of ps) { q.mo = BM.MONEY0; resetLoad(q); } }
   b.rn++; b.ph = "buy"; b.end = now + BM.BUY; b.planted = 0; b.bm = noBm();
   if (ts.length) { b.bm.st = "carried"; b.bm.c = ts[Math.floor(Math.random() * ts.length)].id; }

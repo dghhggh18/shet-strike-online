@@ -4,6 +4,15 @@ const MAPS=[
 {n:"АРЕНА",d:"Классика: ящики и неон",seed:20261022,A:30,cnt:22,w:[2,5],h:[1.5,3.6],pal:[0x3a2f5c,0x2f4a5c,0x5c2f4a,0x2f5c45,0x5c4a2f],bg:0x0a0c14,fog:[14,58],fl:["#151826","#2b3350"],wall:0x1b2038,edge:0x19f0ff,strip:0xff2d8a,hemi:[0x9fb4ff,0x1a1a2a,.95]},
 {n:"ДЖУНГЛИ",d:"Бетонные башни и тесные проходы",seed:777,A:34,cnt:36,w:[2,4],h:[3,6.5],pal:[0x4a4f55,0x3b4045,0x555a60,0x2f3338],bg:0x0d0f12,fog:[10,45],fl:["#1a1c20","#30343a"],wall:0x25282d,edge:0xff9a2f,strip:0xff9a2f,hemi:[0xaab4c0,0x20242a,.9]},
 {n:"КОРОБКА",d:"Маленькая карта, сплошной хаос",seed:4242,A:20,cnt:11,w:[2,4],h:[1.5,3],pal:[0x5c2f4a,0x4a2f5c,0x2f2f5c,0x5c2f5c],bg:0x120816,fog:[10,40],fl:["#1c0f24","#4a2a66"],wall:0x2a1238,edge:0xff2d8a,strip:0x19f0ff,hemi:[0xd0a0ff,0x1a1020,.95]},
+{n:"ДАСТ",d:"Фиксированная карта для «Бомбы»: сайты A и B, мид, проходы",seed:1,A:36,fx:[
+[-23,-21,-36,-27,4,0],[-23,-21,-15,-5,4,0],[-23,-21,5,15,4,0],[-23,-21,27,36,4,0],
+[21,23,-36,-24,4,0],[21,23,-12,-4,4,0],[21,23,4,12,4,0],[21,23,24,36,4,0],
+[-4,-1,-9,-6,2,1],[1,4,6,9,2,1],[-1.5,1.5,-1.5,1.5,1.2,2],
+[-18,-6,-10,-8,3,3],[6,18,-10,-8,3,3],[-18,-6,8,10,3,3],[6,18,8,10,3,3],
+[-12,-9,-26,-23,1.6,2],[9,12,-18,-15,2.4,2],[-16,-13,-24,-21,2.4,2],[13,16,-30,-27,2.4,2],[-7,-5,-31,-29,3,4],
+[-12,-9,23,26,1.6,2],[9,12,15,18,2.4,2],[-16,-13,21,24,2.4,2],[13,16,27,30,2.4,2],[5,7,29,31,3,4],
+[-12,-9,-4,-2,1.6,1],[9,12,2,4,1.6,1]
+],pal:[0xb08a52,0x8f7040,0xa07a48,0x6e5636,0x7a5f3a],bg:0xc9a46a,fog:[30,95],fl:["#b89460","#a07f4c"],wall:0x7a5f3a,edge:0xffe6a8,strip:0xff7a2d,hemi:[0xfff0d0,0x6a5030,1.1]},
 {n:"ПУСТЫНЯ",d:"Просторно, видно далеко",seed:9001,A:36,cnt:14,w:[4,8],h:[2,4.5],pal:[0x8a6f45,0x7a5f3a,0x9a7d52,0x6e5636],bg:0xc9a46a,fog:[30,90],fl:["#b89460","#a07f4c"],wall:0x7a5f3a,edge:0xffe6a8,strip:0xff7a2d,hemi:[0xfff0d0,0x6a5030,1.1]}
 ];;
 const WPN=[
@@ -16,7 +25,7 @@ const WPN=[
 {n:"ТИХИЙ",mag:20,res:80,rate:.1,dmg:17,pel:1,sp:.009,rl:1.6,kick:.035,rng:80,sil:1}];
 const GRN={dmg:80,rad:6,fuse:2,rate:1,rng:35,pel:1};
 const mkSr=a=>()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};
-function genObs(i){const M=MAPS[i],A=M.A,sr=mkSr(M.seed),srr=(a,b)=>a+sr()*(b-a),obs=[];
+function genObs(i){const M=MAPS[i],A=M.A;if(M.fx)return M.fx.map(([x0,x1,z0,z1,h,ci])=>({x0,x1,z0,z1,h,x:(x0+x1)/2,z:(z0+z1)/2,w:x1-x0,d:z1-z0,ci}));const sr=mkSr(M.seed),srr=(a,b)=>a+sr()*(b-a),obs=[];
 const S=(x0,x1,z0,z1,h,c)=>obs.push({x0,x1,z0,z1,h,x:(x0+x1)/2,z:(z0+z1)/2,w:x1-x0,d:z1-z0,ci:c});
 for(const s of[1,-1]){const cx=s*A*.5,cz=-s*A*.5;S(cx-3,cx+3,cz-3,cz+3,2,1);   // вышка 2м + лестница из 3 ступеней по 0.5м
 for(let k=1;k<=3;k++){const a=cx-s*(3+2*(4-k)),b=cx-s*(3+2*(3-k));S(Math.min(a,b),Math.max(a,b),cz-2,cz+2,k*.5,2)}}
@@ -34,7 +43,7 @@ const lvl=xp=>{xp=Math.max(0,Math.min(+xp||0,1e9));let l=1,n=100+l*40;while(xp>=
 const reward=L=>({c:20+L*5,f:L%3===0?1:0});
 const roll=(t,rnd)=>{const w=CASES[t].w;let x=rnd()*w.reduce((a,b)=>a+b,0),r=0;for(;r<3;r++){if(x<w[r])break;x-=w[r]}const p=CAT.filter(s=>!s.d&&s.r===r);return p[Math.min(p.length-1,Math.floor(rnd()*p.length))]};
 return{WN,DUP,PAL,AGENTS,CASES,SK,CAT,lvl,reward,roll}})();
-const BOMB={BUY:15000,LIVE:115000,POST:6000,FUSE:40000,PLANT:3200,DEF:10000,DEFK:5000,WINS:8,MONEY0:800,CAP:16000,WIN:3250,LOSS:1400,STEP:500,PLB:300,DEFB:300,PLT:800};   // режим «Бомба»: тайминги (мс) и экономика
+const BOMB={BUY:15000,LIVE:115000,POST:6000,FUSE:40000,PLANT:3200,DEF:10000,DEFK:5000,WINS:8,MONEY0:800,CAP:16000,HALF:7,WIN:3250,LOSS:1400,STEP:500,PLB:300,DEFB:300,PLT:800};   // режим «Бомба»: тайминги (мс) и экономика
 const PRIM=[0,1,2,5,6],KILL=[300,900,100,300,1500,600,300];   // слоты основного оружия; награда за убийство по индексу оружия
 const ITEMS={rifle:{n:"Винтовка",p:2700,w:0},shot:{n:"Дробовик",p:1100,w:1},snip:{n:"Снайперка",p:4750,w:2},smg:{n:"ПП",p:1200,w:5},sil:{n:"Тихий",p:2000,w:6},kev:{n:"Броня",p:650},kevh:{n:"Броня + шлем",p:1000},frag:{n:"Осколочная",p:300,g:0,max:1},smoke:{n:"Дымовая",p:300,g:1,max:1},flash:{n:"Светошумовая",p:200,g:2,max:2},kit:{n:"Набор сапёра",p:400}};
 const price=(id,s)=>id==="kevh"&&s.ar>=100&&!s.hl?350:ITEMS[id].p;

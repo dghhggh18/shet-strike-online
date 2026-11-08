@@ -491,7 +491,7 @@ else if(m.a===myId){if(!acct){stats.k++;if(m.h)stats.h++;addXp(m.h?30:20);addCoi
 const q=peers.get(m.b);if(q){q.alive=false;spark(q.x,1.2+q.h,q.z,0xff3355,24,5)}
 }
 else if(m.t==="alive"){const q=peers.get(m.id);if(q)q.alive=true}
-else if(m.t==="resp"){const s=spawnPt();P.x=s.x;P.z=s.z;P.h=0;P.vx=P.vz=P.vy=0;hp=100;mag=WPN.map(w=>w.mag);res=WPN.map(w=>w.res);gc=2;gS=1;gF=1;rel=0;sw=0;dead=false;pitch=0;yaw=rr(0,6.28);banner("В БОЙ!",900)}
+else if(m.t==="resp"){rcP=rcY=0;sprayN=0;const s=spawnPt();P.x=s.x;P.z=s.z;P.h=0;P.vx=P.vz=P.vy=0;hp=100;mag=WPN.map(w=>w.mag);res=WPN.map(w=>w.res);gc=2;gS=1;gF=1;rel=0;sw=0;dead=false;pitch=0;yaw=rr(0,6.28);banner("В БОЙ!",900)}
 else if(m.t==="heal"){hp=m.hp;snd(700,.12,"sine",.08,300)}
 else if(m.t==="ammo"){res=WPN.map(w=>w.res);gc=Math.min(4,gc+1);gS=Math.min(3,gS+1);gF=Math.min(3,gF+1);banner("+ПАТРОНЫ",900)}
 else if(m.t==="pk"){if(pks[m.i])pks[m.i].visible=!!m.on}
@@ -504,12 +504,13 @@ else if(m.t==="fl"){const f=flst[m.i];if(f){const was=f.c;f.x=m.x;f.z=m.z;f.c=m.
 else if(m.t==="ts")tsc=m.s;
 else if(m.t==="cap")banner("ЗАХВАТ ФЛАГА! "+(m.tm?"СИНИЕ":"КРАСНЫЕ")+" ("+m.n+")",2500);
 else if(m.t==="prof"){applyMe(m.p);if(m.up)banner("УРОВЕНЬ "+m.up.lv+"!  +"+m.up.c+" монет"+(m.up.f?"  + ящик":""),3200)}
-else if(m.t==="sb")sbl=m.l;
-else if(m.t==="bs"){bo=m;applyPh()}
+else if(m.t==="sb"){sbl=m.l;if(tbOn)renderTab()}
+else if(m.t==="bs"){const pv=bo&&bo.bm?bo.bm.st:"";bo=m;applyPh();if(pv!=="planted"&&m.bm.st==="planted"){say("Бомба заложена");banner("БОМБА ЗАЛОЖЕНА",2000)}else if(pv==="planted"&&m.bm.st==="defused"){say("Бомба обезврежена")}}
 else if(m.t==="own"){own=m.w;gc=m.g[0];gS=m.g[1];gF=m.g[2];arm=m.ar;hlN=m.hl;kitN=m.kit;mo=m.mo;hasBm=!!m.b;if(!own.includes(cur)){const f=own.find(w=>[0,1,2,5,6].includes(w));forceW(f===undefined?3:f)}buyUi()}
 else if(m.t==="pr"){prog=m.p;if(m.k)progK=m.k}
 else if(m.t==="spec"){dead=true;firing=false;banner("Раунд идёт — дождись следующего",2500)}
 else if(m.t==="rend"){if(bo)bo.sc=m.sc;prog=-1;firing=false;banner((m.m?"МАТЧ ОКОНЧЕН · ":"")+(m.w?"СПЕЦНАЗ":"ТЕРРОРИСТЫ")+" ПОБЕЖДАЮТ · "+(BWHY[m.why]||"")+" · +$"+m.rw,4500)}
+else if(m.t==="swap"){for(const[id,tm]of m.l){if(id===myId){myTm=tm;continue}const q=peers.get(id);if(q){const n=q.n,al=q.alive;rmPeer(id);mkPeer(id,n,tm).alive=al}}hasBm=false;banner("СМЕНА СТОРОН",3000)}
 else if(m.t==="boom"){spark(m.x,1.2,m.z,0xff8a20,80,9);snd(60,.6,"sawtooth",.15,-30)}
 }
 
@@ -521,12 +522,13 @@ function shoot(){
 const w=WPN[cur];if(dead||cd>0||rel>0||sw>0)return;
 if(mag[cur]<=0){reload();return}
 cd=w.rate;if(!w.melee)mag[cur]--;kick=w.kick;if(!w.melee&&!w.sil){fl=.075;mz.intensity=3.2;fm.visible=true}
-const ey=eyeH+P.h,sp=w.sp*(Math.hypot(P.vx,P.vz)>1?1.7:1)*(P.h>0?1.6:1)*(cur===2&&!scoped?12:1);
+const csm=curGm==="bomb";if(csm&&t-lastSh>Math.max(w.rate*2.2,.35))sprayN=0;
+const ey=eyeH+P.h,sp=csm?w.sp*csAcc(w):w.sp*(Math.hypot(P.vx,P.vz)>1?1.7:1)*(P.h>0?1.6:1)*(cur===2&&!scoped?12:1);
 let muzzleWorld=null;if(muzzleAnchor){cam.updateMatrixWorld(true);muzzleAnchor.getWorldPosition(O);muzzleWorld=O.clone()}const mx=muzzleWorld?muzzleWorld.x:P.x-Math.sin(yaw)*.8+Math.cos(yaw)*.22,mz2=muzzleWorld?muzzleWorld.z:P.z-Math.cos(yaw)*.8-Math.sin(yaw)*.22,my=muzzleWorld?muzzleWorld.y:ey-.2,hits=new Map();
 O.set(P.x,ey,P.z);
 snd(w.melee?240:w.pel>1?110:480,.1,"sawtooth",w.sil?.02:.07,-300);
 for(let i=0;i<w.pel;i++){
-const yw=yaw+rr(-sp,sp),pt=pitch+rr(-sp,sp),cp=Math.cos(pt);
+const yw=yaw+rcY+rr(-sp,sp),pt=pitch+rcP+rr(-sp,sp),cp=Math.cos(pt);
 D.set(-Math.sin(yw)*cp,Math.sin(pt),-Math.cos(yw)*cp);
 rc.set(O,D);rc.far=w.rng;
 const h=rc.intersectObjects(occ,false);let tm=h.length?h[0].distance:w.rng,tg=null,hd=false;
@@ -543,6 +545,7 @@ if(tm>3)tracer(mx,my,mz2,hx,hy,hz);
 if(i===0&&!w.sil)send({t:"shot",o:[r2(mx),r2(my),r2(mz2)],e:[r2(hx),r2(hy),r2(hz)]});
 }
 if(hits.size){dmgNums(hits);if(wave)wHit(hits);else send({t:"hit",w:cur,h:[...hits].map(([id,a])=>[id,Math.round(a.d),a.h?1:0])})}
+if(csm){const pr=rcPat(cur,sprayN);rcP=Math.min(.6,rcP+pr[0]);rcY+=pr[1];sprayN++;lastSh=t}
 }
 
 /* ---------- update ---------- */
@@ -556,16 +559,18 @@ mf=(keys.KeyW?1:0)-(keys.KeyS?1:0);mr=(keys.KeyD?1:0)-(keys.KeyA?1:0);
 if(stk){const dx=stk.x-stk.ox,dy=stk.y-stk.oy,d=Math.hypot(dx,dy);if(d>8){const m=Math.min(d,55)/55;mr=dx/d*m;mf=-dy/d*m}}
 }
 const l=Math.hypot(mf,mr);if(l>1){mf/=l;mr/=l}
-const cr=inp&&(keys.KeyC||crT);crch=cr?1:0;eyeH+=((cr?1.15:1.7)-eyeH)*Math.min(1,14*dt);const spd=cr?3.5:keys.ShiftLeft?10:7,sy=Math.sin(yaw),cy=Math.cos(yaw),k=Math.min(1,12*dt);
+const cr=inp&&(keys.KeyC||crT);crch=cr?1:0;eyeH+=((cr?1.15:1.7)-eyeH)*Math.min(1,14*dt);const spd=cr?3.5:keys.ShiftLeft?(curGm==="bomb"?3.6:10):7,sy=Math.sin(yaw),cy=Math.cos(yaw),k=Math.min(1,12*dt);
 P.vx+=((-sy*mf+cy*mr)*spd-P.vx)*k;P.vz+=((-cy*mf-sy*mr)*spd-P.vz)*k;
 P.x+=P.vx*dt;P.z+=P.vz*dt;collide(P,.45,P.h);
-if(inp&&!cr&&P.h<=gnd(P.x,P.z,P.h)+.05){const ms=Math.hypot(P.vx,P.vz);if(ms>2){stD+=ms*dt;if(stD>2.6){stD=0;snd(70+Math.random()*20,.05,"triangle",.035,-15)}}}
+if(inp&&!cr&&P.h<=gnd(P.x,P.z,P.h)+.05){const ms=Math.hypot(P.vx,P.vz);if(ms>(curGm==="bomb"?4.4:2)){stD+=ms*dt;if(stD>2.6){stD=0;snd(70+Math.random()*20,.05,"triangle",.035,-15)}}}
 if(inp&&jumpReq&&P.h<=gnd(P.x,P.z,P.h)+.05)P.vy=7.5;jumpReq=false;
 P.vy-=22*dt;P.h+=P.vy*dt;{const g1=gnd(P.x,P.z,P.h);if(P.h<=g1&&P.vy<=0){P.h=g1;P.vy=0}}
 updG(dt);
 cd-=dt;if(sw>0)sw-=dt;
+if(rcP||rcY){const idle=t-lastSh>Math.max(WPN[cur].rate*1.5,.12),k=Math.min(1,dt*(idle?7:1.2));rcP-=rcP*k;rcY-=rcY*k;if(Math.abs(rcP)<1e-4)rcP=0;if(Math.abs(rcY)<1e-4)rcY=0}
 if(rel>0){rel-=dt;if(rel<=0){const n=Math.min(WPN[cur].mag-mag[cur],res[cur]);mag[cur]+=n;res[cur]-=n}}
 if(inp&&firing)shoot();
+if(dead&&curGm==="bomb"){if(firing&&!specLatch){specLatch=true;specI++}else if(!firing)specLatch=false}
 if(!dead&&mag[cur]<=0)reload();
 sendT-=dt;if(sendT<=0&&entered&&!dead){sendT=.05;send({t:"s",x:r2(P.x),y:r2(P.h),z:r2(P.z),yaw:r2(yaw),c:crch})}
 }
@@ -584,14 +589,15 @@ if(ac||fxUpdate.o){pgeo.attributes.position.needsUpdate=true;pgeo.attributes.col
 for(const o of trs)if(o.t>0){o.t-=dt;if(o.t<=0)o.l.visible=false}
 fl-=dt;if(fl<=0)fm.visible=false;mz.intensity=Math.max(0,mz.intensity-dt*60);
 const kk=Math.min(1,14*dt);
-for(const q of peers.values()){const ox=q.x,oz=q.z,ex=Math.min(.25,t-q.rt);q.x+=(q.tx+q.vx*ex-q.x)*kk;q.z+=(q.tz+q.vz*ex-q.z)*kk;q.h+=(q.th-q.h)*kk;let dy=q.ty-q.yaw;dy=Math.atan2(Math.sin(dy),Math.cos(dy));q.yaw+=dy*kk;q.g.position.set(q.x,q.h,q.z);q.g.rotation.y=q.yaw+Math.PI;if(q.alive){q.dd=0;q.g.rotation.x=0}else{q.dd=Math.min(1,(q.dd||0)+dt*2.2);q.g.rotation.x=-1.45*q.dd}q.g.visible=q.dd<1;const sv=Math.hypot(q.x-ox,q.z-oz)/Math.max(dt,.001);q.sv+=(sv-q.sv)*.15;q.ph+=q.sv*dt*1.7;const an=Math.min(1,q.sv/3.5)*.8*Math.sin(q.ph);q.l1.rotation.x=an;q.l2.rotation.x=-an;q.sd.position.y=.03-q.h;q.g.scale.y+=((q.cr?.75:1)-q.g.scale.y)*.3;const spn=Math.sin(q.ph);if(q.alive&&!q.cr&&q.sv>2.2&&q.h<.1&&spn*(q.ps||0)<0){const dd=Math.hypot(q.x-P.x,q.z-P.z);if(dd<18)snd(75+Math.random()*30,.06,"triangle",.07*(1-dd/18),-20)}q.ps=spn}
+for(const q of peers.values()){const ox=q.x,oz=q.z,ex=Math.min(.25,t-q.rt);q.x+=(q.tx+q.vx*ex-q.x)*kk;q.z+=(q.tz+q.vz*ex-q.z)*kk;q.h+=(q.th-q.h)*kk;let dy=q.ty-q.yaw;dy=Math.atan2(Math.sin(dy),Math.cos(dy));q.yaw+=dy*kk;q.g.position.set(q.x,q.h,q.z);q.g.rotation.y=q.yaw+Math.PI;if(q.alive){q.dd=0;q.g.rotation.x=0}else{q.dd=Math.min(1,(q.dd||0)+dt*2.2);q.g.rotation.x=-1.45*q.dd}q.g.visible=q.dd<1;const sv=Math.hypot(q.x-ox,q.z-oz)/Math.max(dt,.001);q.sv+=(sv-q.sv)*.15;q.ph+=q.sv*dt*1.7;const an=Math.min(1,q.sv/3.5)*.8*Math.sin(q.ph);q.l1.rotation.x=an;q.l2.rotation.x=-an;q.sd.position.y=.03-q.h;q.g.scale.y+=((q.cr?.75:1)-q.g.scale.y)*.3;const spn=Math.sin(q.ph);if(q.alive&&!q.cr&&q.sv>(curGm==="bomb"?4.4:2.2)&&q.h<.1&&spn*(q.ps||0)<0){const dd=Math.hypot(q.x-P.x,q.z-P.z);if(dd<18)snd(75+Math.random()*30,.06,"triangle",.07*(1-dd/18),-20)}q.ps=spn}
 kick-=kick*kk;
 const mv=Math.hypot(P.vx,P.vz),bob=Math.sin(t*10)*Math.min(mv,7)/7,w=WPN[cur];
 let dip=0,tilt=0;if(rel>0){const f=rel/w.rl;dip=Math.sin(f*Math.PI)*.12;tilt=Math.sin(f*Math.PI)*.7}
 if(sw>0)dip+=Math.sin(Math.min(1,sw/.35)*Math.PI)*.25;
 vmw.visible=!dead&&st!=="menu"&&!scoped&&vmOn;
 const vo=voff();vmw.position.set(.26+vo[0]+bob*.012,-.27+vo[1]+Math.abs(bob)*.015-dip,-.2+vo[2]+kick);vmw.rotation.set(kick*1.2+tilt,0,0);updHands();
-if(st==="menu")cam.position.set(0,10,0);else cam.position.set(P.x,dead?.35:eyeH+P.h,P.z);cam.rotation.set(dead?.3:pitch,yaw,0);
+if(st==="menu")cam.position.set(0,10,0);else{const sp=specTgt();if(sp){cam.position.set(sp.x,1.7+sp.h,sp.z);cam.rotation.set(0,sp.yaw,0)}else{cam.position.set(P.x,dead?.35:eyeH+P.h,P.z);cam.rotation.set(dead?.3:Math.max(-1.5,Math.min(1.5,pitch+rcP)),yaw+rcY,0)}}
+if(st==="menu")cam.rotation.set(pitch,yaw,0);
 }
 function handCols(){const a=myTm===0?0xd23a3a:myTm===1?0x3a6ad2:AGENTS[inv.agent%AGENTS.length][1];return a}
 function voff(){const vw=sw>.175?pvw:cur;return vw===0&&muzzleAnchor?VOFF_G:VOFF[vw]}
@@ -627,6 +633,32 @@ $("go").disabled=true;$("go").textContent="ПОДКЛЮЧЕНИЕ…";join();
 $("go").addEventListener("click",begin);
 const HELP=(coarse?"Левый палец — двигаться, правый — осмотр.\nОГОНЬ, ПРЫЖОК, РЕЛОАД и СМЕНА — кнопки справа. У снайперки появляется кнопка ЗУМ. Ещё есть ПРИС, НОЖ, ГРАНАТА и ЧАТ.\nМожно водить пальцем по ОГОНЬ — и целиться, и стрелять.":"WASD — двигаться, мышь — целиться, ЛКМ — огонь.\nR — перезарядка, 1–7 или Q (5 — нож), H — тип гранаты — смена оружия, ПКМ (зажать) — прицел снайперки, Пробел — прыжок (на вышки и ступени тоже), Shift — бег, C — присед, G — граната, F — нож, T — чат.\nЕсли мышь не захватилась — смотри стрелками.")+"\nРежим: все против всех. Голова — двойной урон. Респаун через 3 секунды.\nКод комнаты: введи одинаковый код с друзьями — получится приватная комната с командами 🔴 и 🔵.\nВОЛНЫ — один против волн ботов, без онлайна.";
 /* ---------- режимы игры, флаги, дым и ослепление, редактор кнопок ---------- */
+/* ---------- стрельба в стиле CS (режим «Бомба»): паттерн отдачи, разброс от движения ---------- */
+let sprayN=0,lastSh=-9,rcP=0,rcY=0;
+const RCY=[0,0,.002,.004,.006,.003,-.004,-.008,-.01,-.006,.004,.009,.012,.01,.004,-.006,-.012,-.014,-.01,-.002,.007,.012,.013,.008,-.002,-.01,-.014,-.012,-.006,.003];
+function rcPat(wi,i){const w=WPN[wi];if(w.melee)return[0,0];
+if(wi===0)return[Math.max(.007,.024-i*.0022),RCY[i%RCY.length]];
+if(wi===5)return[Math.max(.004,.014-i*.0008),.005*Math.sin(i*.9+1)];
+if(wi===6)return[Math.max(.005,.016-i*.0015),.005*Math.sin(i*.7)];
+if(wi===3)return[Math.max(.016,.03-i*.003),.003*(i%2?1:-1)];
+return[wi===2?.07:.05,0]}
+function csAcc(w){const v=Math.hypot(P.vx,P.vz),air=P.h>gnd(P.x,P.z,P.h)+.05;let f=v<=3.7?1:1+Math.min(1,(v-3.7)/3.3)*3.5;
+if(air)f=Math.max(f,5.5);else if(crch&&v<2)f*=.7;f*=1+Math.min(sprayN,12)*.05;if(w.pel>1)f=Math.min(f,1.6);if(cur===2&&!scoped)f*=12;return f}
+/* ---------- звук, табло по Tab, наблюдение после смерти ---------- */
+let lastBeep=0,tbOn=false,specI=0,specLatch=false,specP=null;
+function say(tx){try{if(!window.speechSynthesis)return;const u=new SpeechSynthesisUtterance(tx);u.lang="ru-RU";u.rate=1.05;speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){}}
+function renderTab(){let e=$("tb");if(!e){e=document.createElement("div");e.id="tb";e.style.cssText="position:fixed;left:50%;top:12%;transform:translateX(-50%);z-index:40;min-width:min(520px,92vw);background:rgba(8,12,24,.9);border:1px solid #3a4a7a;padding:12px 14px;color:#fff;font:600 14px system-ui;white-space:pre;pointer-events:none";document.body.appendChild(e)}
+e.style.display=tbOn?"block":"none";if(!tbOn)return;
+const row=s=>(s[3]===myId?"► ":"   ")+(s[0]+"            ").slice(0,12)+"  "+String(s[1]).padStart(3)+"  "+String(s[2]).padStart(3),srt=l=>[...l].sort((a,b)=>b[1]-a[1]||a[2]-b[2]);
+let h="";if(myTm>=0){const bm=curGm==="bomb",n0=bm?"🔴 ТЕРРОРИСТЫ":"🔴 КРАСНЫЕ",n1=bm?"🔵 СПЕЦНАЗ":"🔵 СИНИЕ";
+h=n0+(bm&&bo?"  "+bo.sc[0]:"")+"\n"+srt(sbl.filter(s=>s[4]===0)).map(row).join("\n")+"\n\n"+n1+(bm&&bo?"  "+bo.sc[1]:"")+"\n"+srt(sbl.filter(s=>s[4]===1)).map(row).join("\n")}
+else h="ИГРОКИ\n"+srt(sbl).map(row).join("\n");
+e.textContent="имя           убил  умер\n"+h}
+addEventListener("keydown",e=>{if(e.code==="Tab"&&st==="play"){e.preventDefault();if(!tbOn){tbOn=true;renderTab()}}});
+addEventListener("keyup",e=>{if(e.code==="Tab"&&tbOn){tbOn=false;renderTab()}});
+function specTgt(){if(!(dead&&curGm==="bomb"&&bo&&bo.ph!=="wait")){if(specP){specP.g.visible=true;specP=null}return null}
+const al=[...peers.values()].filter(q=>q.alive);if(!al.length){if(specP){specP.g.visible=true;specP=null}return null}
+const mine=al.filter(q=>q.tm===myTm),l=mine.length?mine:al,q=l[specI%l.length];if(specP&&specP!==q)specP.g.visible=true;specP=q;q.g.visible=false;return q}
 /* ---------- режим «Бомба» ---------- */
 let bo=null,own=null,mo=0,arm=0,frz=false,actOn=false,hasBm=false,kitN=0,hlN=0,buyOpen=false,prog=-1,progK="",stM=[],bmM=null,lastBx="",lastPh="",bhOn=false;
 const ownd=w=>!own||own.includes(w);
@@ -669,10 +701,11 @@ by.innerHTML=h}
 function bombHud(){
 if(curGm!=="bomb"||!bo||st!=="play"){if(bhOn){bhOn=false;for(const id of["bh","bpg","bab","by","bsh"]){const e=$(id);if(e)e.style.display="none"}}return}
 mkBombUi();bhOn=true;
-setT("bh",(myTm===0?"🔴 ТЕРРОРИСТ":myTm===1?"🔵 СПЕЦНАЗ":"")+" · 💰$"+mo+" · 🛡"+Math.round(arm)+(hlN?"+шлем":"")+(kitN?" · 🔧":"")+(hasBm?"\n💣 БОМБА У ТЕБЯ"+(bo.ph==="live"?" — заложи на A/B":""):""));
+setT("bh",(myTm===0?"🔴 ТЕРРОРИСТ":myTm===1?"🔵 СПЕЦНАЗ":"")+" · 💰$"+mo+" · 🛡"+Math.round(arm)+(hlN?"+шлем":"")+(kitN?" · 🔧":"")+(hasBm?"\n💣 БОМБА У ТЕБЯ"+(bo.ph==="live"?" — заложи на A/B":""):"")+(dead&&specP?"\n👁 "+specP.n+" (ОГОНЬ — следующий)":""));
 $("bh").style.display="";
 const pg=$("bpg"),sh=prog>=0&&!dead;pg.style.display=sh?"block":"none";if(sh){setT("bpt",progK==="plant"?"Закладка бомбы…":"Обезвреживание…");$("bpf").style.width=Math.round(prog*100)+"%"}
 const na=nearAct(),ab=$("bab");ab.style.display=na?"block":"none";if(na)setT("bab",na==="plant"?"ЗАЛОЖИТЬ (E)":"ОБЕЗВРЕДИТЬ (E)");
+if(bo.bm.st==="planted"&&bo.ph==="live"){const per=Math.max(.12,Math.min(1,tmv/40));if(t-lastBeep>per){lastBeep=t;snd(1500,.07,"square",.05,0)}}
 if(bmM&&bo.bm.st==="planted")bmM.material.color.setHex((t*4|0)%2?0xff2020:0x552020);
 $("by").style.display=buyOpen&&!dead?"block":"none";$("bsh").style.display=(bo.ph==="buy"||bo.ph==="wait")&&!dead?"block":"none"}
 addEventListener("keydown",e=>{if(curGm!=="bomb"||!bo||st!=="play"||e.repeat)return;const tg=e.target;if(tg&&(tg.tagName==="INPUT"||tg.tagName==="TEXTAREA"))return;

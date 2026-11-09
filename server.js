@@ -62,7 +62,7 @@ function startRound(R, ps) {
   b.rn++; b.ph = "buy"; b.end = now + BM.BUY; b.planted = 0; b.bm = noBm();
   if (ts.length) { b.bm.st = "carried"; b.bm.c = ts[Math.floor(Math.random() * ts.length)].id; }
   for (const q of ps) {
-    q.a = true; q.hp = 100; q.inv = now + BM.BUY; q.act = null;
+    q.a = true; q.hp = 100; q.inv = now + BM.BUY; q.act = null; q.dm = {};
     send(q.ws, { t: "resp" }); room(R.k, { t: "alive", id: q.id }, q.ws);
   }
   bsend(R);
@@ -160,7 +160,7 @@ const wss = new WebSocketServer({ server: srv, maxPayload: 2048 });
 const send = (w, o) => { if (w && w.readyState === 1) w.send(JSON.stringify(o)); };
 const inRoom = k => [...pl.values()].filter(q => q.j && q.m === k);
 const room = (k, o, ex) => { for (const q of pl.values()) if (q.j && q.m === k && q.ws !== ex) send(q.ws, o); };
-const sb = k => room(k, { t: "sb", l: inRoom(k).map(q => [q.n, q.k, q.d, q.id, q.tm, q.al | 0]) });
+const sb = k => room(k, { t: "sb", l: inRoom(k).map(q => [q.n, q.k, q.d, q.id, q.tm, q.al | 0, q.pg | 0, q.as | 0]) });
 const flMsg = (R, i) => { const f = R.fl[i]; room(R.k, { t: "fl", i, x: f.x, z: f.z, c: f.c, d: f.d }); };
 function dropFlag(R, p) { if (!R || !R.fl) return; R.fl.forEach((f, i) => { if (f.c === p.id) { f.c = 0; f.x = p.x; f.z = p.z; f.d = 1; f.dt = Date.now(); flMsg(R, i); } }); }
 function ctfStep(R, p) {   // захват флага: подобрать вражеский, вернуть свой упавший, занести на базу
@@ -183,10 +183,12 @@ function hurt(tg, at, d, hs, wi) {
   if (B && B.ph !== "live" && B.ph !== "wait") return;   // в закупку и перерыв урона нет
   if (R.team && tg !== at && tg.tm === at.tm) return;   // по своим не бьём
   if (B && tg.ar > 0 && (!hs || tg.hl)) { const ab = d * 0.5; tg.ar = Math.max(0, tg.ar - ab); d -= ab; }   // броня гасит половину урона (шлем — и от хедшота)
+  if (at !== tg && at !== BOMB_AT) { const e = tg.dm[at.id] || (tg.dm[at.id] = { d: 0, t: 0 }); e.d += d; e.t = Date.now(); }
   tg.hp -= d;
   send(tg.ws, { t: "hp", hp: Math.max(0, Math.round(tg.hp)), f: at.id, ar: Math.round(tg.ar | 0) });
   if (tg.hp > 0) return;
   tg.a = false; at.k++; tg.d++;
+  { const nw = Date.now(); for (const id in tg.dm) { const e = tg.dm[id]; if (+id === at.id || e.d < 30 || nw - e.t > 8000) continue; const q = [...pl.values()].find(z => z.id === +id && z.m === tg.m); if (q && (!R.team || q.tm !== tg.tm)) q.as = (q.as | 0) + 1; } tg.dm = {}; }
   if (B) {
     if (at !== tg && at !== BOMB_AT && at.tm !== tg.tm) { addMo(at, KILLR[wi] === undefined ? 300 : KILLR[wi]); sendOwn(at); }
     resetLoad(tg); tg.act = null; dropBomb(R, tg);
@@ -247,10 +249,10 @@ setInterval(() => {
 /* ---------- соединения ---------- */
 wss.on("connection", ws => {
   if (pl.size >= MAX * 40) { ws.close(); return; }
-  const p = { id: nid++, n: "Игрок", m: "0", hp: 100, k: 0, d: 0, a: true, j: false, lh: {}, x: 0, y: 0, z: 0, inv: 0, tm: -1, ct: 0, gt: 0, al: 0, tok: "", ws, own: [3, 4], g: [0, 0, 0], ar: 0, hl: 0, kit: 0, mo: BM.MONEY0, act: null };
+  const p = { id: nid++, n: "Игрок", m: "0", hp: 100, k: 0, d: 0, a: true, j: false, lh: {}, x: 0, y: 0, z: 0, inv: 0, tm: -1, ct: 0, gt: 0, al: 0, tok: "", ws, own: [3, 4], g: [0, 0, 0], ar: 0, hl: 0, kit: 0, mo: BM.MONEY0, act: null, pg: 0, pt: 0, as: 0, dm: {} };
   pl.set(ws, p);
   ws.isAlive = true;
-  ws.on("pong", () => { ws.isAlive = true; });
+  ws.on("pong", () => { ws.isAlive = true; const q = pl.get(ws); if (q && q.pt) q.pg = Date.now() - q.pt; });
 
   ws.on("message", raw => {
     let m;
@@ -304,7 +306,10 @@ wss.on("connection", ws => {
     } else if (m.t === "c") {
       const x = String(m.x || "").replace(/[<>]/g, "").trim().slice(0, 80);
       if (!x || now - p.ct < 700) return;
-      p.ct = now; room(p.m, { t: "c", id: p.id, n: p.n, x, tm: p.tm });
+      p.ct = now;
+      const Rc = ROOMS.get(p.m), msg = { t: "c", id: p.id, n: p.n, x, tm: p.tm };
+      if (m.tc && Rc.team && p.tm >= 0) { msg.tc = 1; for (const q of inRoom(p.m)) if (q.tm === p.tm) send(q.ws, msg); }   // командный чат — только своим
+      else room(p.m, msg);
     } else if (m.t === "gr" && p.a && ROOMS.get(p.m).gm !== "arms" && now - p.gt >= GRN.rate * 700 && Array.isArray(m.o) && Array.isArray(m.v) && m.o.length === 3 && m.v.length === 3) {
       const Rg = ROOMS.get(p.m), kg = (m.k | 0) % 3;
       if (Rg.b) { if ((Rg.b.ph !== "live" && Rg.b.ph !== "wait") || !(p.g[kg] > 0)) return; p.g[kg]--; }   // в «Бомбе» гранаты только купленные
@@ -364,6 +369,7 @@ setInterval(() => {
   for (const w of pl.keys()) {
     if (!w.isAlive) { w.terminate(); continue; }
     w.isAlive = false;
+    { const q = pl.get(w); if (q) q.pt = Date.now(); }
     w.ping();
   }
 }, 25000);

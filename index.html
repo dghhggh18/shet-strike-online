@@ -244,6 +244,24 @@ html.edt::after{content:"";position:fixed;inset:0;z-index:48;background:rgba(8,1
 #tb .tbr{display:grid;grid-template-columns:28px 1fr 38px 38px;padding:6px 10px;gap:4px}#tb .tbh{opacity:.6;font-size:12px}
 #tb .tbr.me{background:rgba(255,255,255,.12);font-weight:800}#tb .tbf{background:#000a;padding:6px 10px;font-size:12px}
 #stb{position:absolute;left:150px;top:6px;width:38px;height:38px;border-radius:50%;background:rgba(0,0,0,.45);color:#fff;border:0;font-size:18px;pointer-events:auto}
+
+#tb .tbr{grid-template-columns:28px 1fr 30px 30px 30px 46px}
+#cw{position:fixed;inset:3% 6%;z-index:85;display:none;flex-direction:column;background:rgba(10,14,24,.95);color:#fff;font-family:system-ui;border:1px solid #fff2}
+#cw .cwh{display:flex;align-items:center;background:#0007}#cw .cwh button{flex:0 0 auto;padding:12px 22px;background:none;border:0;color:#aab;font:800 15px system-ui;border-bottom:3px solid transparent}
+#cw .cwh button.on{color:#fff;border-color:#fff}#cw .cwh .sp{flex:1}#cw .cwh .cx{font-size:24px;padding:6px 16px}
+#cw .cwb{flex:1;display:flex;min-height:0}#cw .cwm{flex:1;overflow:auto;padding:8px 12px;font-size:14px;line-height:1.5}#cw .cwp{width:30%;border-left:1px solid #fff2;overflow:auto;padding:6px 10px;font-size:13px}
+#cw .cwf{display:flex;border-top:1px solid #fff2}#cw .cwf input{flex:1;padding:12px;background:#0006;border:0;color:#fff;font:14px system-ui;min-width:0}#cw .cwf button{padding:0 18px;background:#2b3a66;border:0;color:#fff;font-size:20px}
+#pm{position:fixed;inset:0;z-index:85;display:none;background:linear-gradient(#2a2f36,#1b1d22);color:#fff;font-family:system-ui}
+#pm nav{width:68px;display:flex;flex-direction:column;background:#0006}#pm nav button{flex:1;background:none;border:0;border-bottom:1px solid #fff2;color:#cfd3da;font-size:26px}#pm nav button.on{background:rgba(255,255,255,.1);border-left:3px solid #fff}
+#pm main{flex:1;display:flex;flex-direction:column;min-width:0}#pm h2{margin:0;padding:12px 18px;font-size:clamp(18px,4vh,30px);background:#0005;letter-spacing:1px}
+#pm .pmb{flex:1;overflow:auto;padding:10px 14px}#pm .pmt{display:flex;gap:12px}#pm .pmc{flex:1;min-width:0}
+#pm .pmc h3{margin:0 0 8px;font-size:clamp(14px,3vh,20px)}#pm .pmc.t1 h3{color:#8fa8ff}#pm .pmc.t0 h3{color:#f0b24a}
+#pm .pmp{display:flex;align-items:center;gap:10px;padding:8px;margin-bottom:6px;background:rgba(255,255,255,.07)}#pm .pmp.me{background:rgba(255,255,255,.16)}
+#pm .pmp i{width:38px;height:38px;border-radius:4px;background:#555;display:flex;align-items:center;justify-content:center;font-style:normal;font-weight:800;font-size:18px}
+#pm .pmc.t0 .pmp i{background:#b8442f}#pm .pmc.t1 .pmp i{background:#3a68c8}#pm .pmp small{display:block;opacity:.55;font-size:11px}
+#pm .pmf{display:flex;justify-content:space-between;gap:10px;padding:10px 14px;background:#0007}
+#pm .pmf button{padding:14px 20px;background:rgba(255,255,255,.08);border:1px solid #fff3;color:#fff;font:800 clamp(12px,2.6vh,16px) system-ui}
+#pm .pms label{display:block;margin:14px 0 4px;font-size:14px}#pm .pms input{width:min(420px,90%)}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
@@ -544,7 +562,7 @@ else if(m.t==="ammo"){res=WPN.map(w=>w.res);gc=Math.min(4,gc+1);gS=Math.min(3,gS
 else if(m.t==="pk"){if(pks[m.i])pks[m.i].visible=!!m.on}
 else if(m.t==="tm")tmv=m.s;
 else if(m.t==="end"){tmv=0;firing=false;banner("РАУНД ОКОНЧЕН — "+(m.w==="НИЧЬЯ"?"ничья":(m.wt>=0?"победили ":"победил ")+m.w),6000)}
-else if(m.t==="c")chatLine(m.n,m.x,m.tm);
+else if(m.t==="c")chatLine(m.n,m.x,m.tm,m.tc);
 else if(m.t==="gr"){if(m.id!==myId)addG(m.o,m.v,false,m.k)}
 else if(m.t==="al"){armsL=m.l|0;if(curGm==="arms"){forceW(LAD[armsL]);banner("ОРУЖИЕ "+(armsL+1)+"/"+LAD.length+": "+WPN[cur].n,1500)}}
 else if(m.t==="fl"){const f=flst[m.i];if(f){const was=f.c;f.x=m.x;f.z=m.z;f.c=m.c;f.d=m.d;if(m.c===myId&&was!==myId)banner("ТЫ НЕСЁШЬ ФЛАГ! Неси на свою базу",2500);else if(m.c&&was!==m.c&&m.i===myTm)banner("ВРАГ УКРАЛ ВАШ ФЛАГ!",2000)}}
@@ -663,13 +681,13 @@ const zb=$("zm"),zv=cur===2?"flex":"none";if(zb._d!==zv){zb._d=zv;zb.style.displ
 const w=WPN[cur];{const hf=$("hpf"),hw=Math.max(0,hp)+"%";if(hf._w!==hw){hf._w=hw;hf.style.width=hw;hf.style.background=hp<30?"#ff3158":hp<60?"#ffb52e":"#3dff7a"}}
 setT("hpt","HP "+Math.ceil(Math.max(0,hp)));
 const ts=t=>sbl.reduce((a,s)=>a+(s[4]===t?s[1]:0),0),l=[...sbl].sort((a,b)=>(curGm==="arms"?(b[5]|0)-(a[5]|0):0)||b[1]-a[1]||a[2]-b[2]).slice(0,6).map((s,i)=>(s[3]===myId?"► ":"")+(s[4]===0?"🔴":s[4]===1?"🔵":(i+1)+".")+" "+s[0]+"  "+s[1]+"/"+s[2]+(curGm==="arms"?"  ⚔"+((s[5]|0)+1):""));
-setT("sc",wave?waveTxt():curGm==="bomb"&&bo?"":(rkc?"КОМНАТА "+rkc+" · ":"")+(GMN[curGm]?GMN[curGm]+" · ":"")+(curGm==="arms"?"ОРУЖИЕ "+(armsL+1)+"/"+LAD.length+" · ":"")+"ОНЛАЙН "+sbl.length+"  ⏱ "+(tmv>0?Math.floor(tmv/60)+":"+String(tmv%60).padStart(2,"0"):"--")+"  (убил/умер)\n"+(myTm>=0?"🔴 "+(curGm==="ctf"?tsc[0]:ts(0))+" : "+(curGm==="ctf"?tsc[1]:ts(1))+" 🔵\n":"")+l.join("\n"));
+setT("sc",wave?waveTxt():(curGm==="bomb"&&bo)||(curGm==="tdm"&&myTm>=0)?"":(rkc?"КОМНАТА "+rkc+" · ":"")+(GMN[curGm]?GMN[curGm]+" · ":"")+(curGm==="arms"?"ОРУЖИЕ "+(armsL+1)+"/"+LAD.length+" · ":"")+"ОНЛАЙН "+sbl.length+"  ⏱ "+(tmv>0?Math.floor(tmv/60)+":"+String(tmv%60).padStart(2,"0"):"--")+"  (убил/умер)\n"+(myTm>=0?"🔴 "+(curGm==="ctf"?tsc[0]:ts(0))+" : "+(curGm==="ctf"?tsc[1]:ts(1))+" 🔵\n":"")+l.join("\n"));
 setT("am",(rel>0?"ПЕРЕЗАРЯДКА":w.melee?"—  "+gtxt():mag[cur]+" / "+res[cur]+"  "+gtxt())+"\n"+w.n);
 }
 
 /* ---------- flow ---------- */
-function enter(){if(!entered){newGame();entered=true}st="play";$("go").disabled=false;$("ov").style.display="none";$("lobby").style.display="none";$("hud").style.display=""}
-function pause(tt,m,b){st="pause";firing=false;stk=null;lk=null;$("lobby").style.display="none";const i=$("in");i.insertBefore($("go"),$("lb"));i.appendChild($("msg"));$("lb").style.display="block";$("t").innerHTML=tt||"ПАУЗА";$("msg").textContent=m||(wave?"Пауза — игра остановлена.":"Игра идёт дальше — ты уязвим!");$("go").textContent=b||"ПРОДОЛЖИТЬ";$("go").disabled=false;$("ov").style.display="flex"}
+function enter(){{const pm=$("pm");if(pm)pm.style.display="none"}if(!entered){newGame();entered=true}st="play";$("go").disabled=false;$("ov").style.display="none";$("lobby").style.display="none";$("hud").style.display=""}
+function pause(tt,m,b){if(!tt&&!m&&!b&&!wave&&ws&&st==="play"){u2Pause();return}st="pause";firing=false;stk=null;lk=null;$("lobby").style.display="none";const i=$("in");i.insertBefore($("go"),$("lb"));i.appendChild($("msg"));$("lb").style.display="block";$("t").innerHTML=tt||"ПАУЗА";$("msg").textContent=m||(wave?"Пауза — игра остановлена.":"Игра идёт дальше — ты уязвим!");$("go").textContent=b||"ПРОДОЛЖИТЬ";$("go").disabled=false;$("ov").style.display="flex"}
 function begin(){
 if(st==="menu"){if(mode==="wave"){beginWave();return}const q=$("rk");if(mode==="online")q.value="";else if(!q.value.trim())q.value=genCode()}
 initAudio();
@@ -713,10 +731,10 @@ const l=WPN.map((w,i)=>i).filter(ownd),R=Math.min(130,innerHeight*.3);e.innerHTM
 l.forEach((w,j)=>{const a=-Math.PI/2+j*2*Math.PI/l.length,b=u2h("button",w===cur?"on":"",u2e(WPN[w].n)+(w===4?"":"<small>"+mag[w]+"/"+res[w]+"</small>"));b.dataset.w=w;b.style.left="calc(50% + "+Math.cos(a)*R+"px)";b.style.top="calc(50% + "+Math.sin(a)*R+"px)";e.appendChild(b)});
 e.style.display="block";clearTimeout(wwT);wwT=setTimeout(closeWheel,4000)}
 function topHud(){let e=$("th");if(!e){e=u2h("div","","");e.id="th";document.body.appendChild(e)}
-const on=curGm==="bomb"&&bo&&st==="play";e.style.display=on?"flex":"none";if(!on)return;
-const my=myTm>=0?myTm:0,sc=bo.sc,lt=sbl.filter(s=>s[4]===my),rt=sbl.filter(s=>s[4]===1-my),al=s=>{if(s[3]===myId)return!dead;const q=peers.get(s[3]);return!!(q&&q.alive)};
+const bmd=curGm==="bomb"&&bo,tdm=curGm==="tdm"&&myTm>=0,on=(bmd||tdm)&&st==="play";e.style.display=on?"flex":"none";if(!on)return;
+const my=myTm>=0?myTm:0,sc=bmd?bo.sc:[0,1].map(t=>sbl.filter(s=>s[4]===t).reduce((a,s)=>a+s[1],0)),lt=sbl.filter(s=>s[4]===my),rt=sbl.filter(s=>s[4]===1-my),al=s=>{if(s[3]===myId)return!dead;const q=peers.get(s[3]);return!!(q&&q.alive)};
 const slot=(s,t)=>{const a=al(s);return'<div class="ths t'+t+(a?"":" dd")+'"><b>'+(a?u2e(s[0]).slice(0,1).toUpperCase():"💀")+'</b><i>'+s[1]+'</i></div>'};
-const ph=bo.ph,pl=bo.bm&&bo.bm.st==="planted",tt=u2f(tmv),pt=ph==="wait"?"ОЖИДАНИЕ ИГРОКОВ":ph==="buy"?"ЗАКУПКА "+tt:ph==="post"?"ПЕРЕРЫВ":pl?"💣 БОМБА ЗАЛОЖЕНА":"РАУНД "+bo.rn;
+const ph=bmd?bo.ph:"",pl=bmd&&bo.bm&&bo.bm.st==="planted",tt=u2f(tmv),pt=!bmd?"КОМАНДНЫЙ БОЙ":ph==="wait"?"ОЖИДАНИЕ ИГРОКОВ":ph==="buy"?"ЗАКУПКА "+tt:ph==="post"?"ПЕРЕРЫВ":pl?"💣 БОМБА ЗАЛОЖЕНА":"РАУНД "+bo.rn;
 const html='<div class="thr">'+lt.map(s=>slot(s,my)).join("")+'</div><div class="thc"><div class="thsc"><b class="t'+my+'">'+sc[my]+'</b><em>'+tt+'</em><b class="t'+(1-my)+'">'+sc[1-my]+'</b></div><div class="thp">'+pt+'</div></div><div class="thr">'+rt.map(s=>slot(s,1-my)).join("")+'</div>';
 if(e._h!==html){e._h=html;e.innerHTML=html}}
 /* ---------- стрельба в стиле CS (режим «Бомба»): паттерн отдачи, разброс от движения ---------- */
@@ -739,8 +757,8 @@ let lastBeep=0,tbOn=false,specI=0,specLatch=false,specP=null;
 function say(tx){try{if(!window.speechSynthesis)return;const u=new SpeechSynthesisUtterance(tx);u.lang="ru-RU";u.rate=1.05;speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){}}
 function renderTab(){let e=$("tb");if(!e){e=u2h("div","","");e.id="tb";document.body.appendChild(e)}
 e.style.display=tbOn?"block":"none";if(!tbOn)return;
-const bm=curGm==="bomb",hd='<div class="tbr tbh"><span>#</span><span>Имя</span><span>У</span><span>С</span></div>',srt=l=>[...l].sort((a,b)=>b[1]-a[1]||a[2]-b[2]);
-const col=(l,t,title,sc)=>'<div class="tbc t'+t+'"><div class="tbt"><b>'+title+'</b><i>'+(sc===undefined?"":sc)+'</i></div>'+hd+srt(l).map((s,i)=>'<div class="tbr'+(s[3]===myId?" me":"")+'"><span>'+(i+1)+'</span><span>'+u2e(s[0])+'</span><span>'+s[1]+'</span><span>'+s[2]+'</span></div>').join("")+'</div>';
+const bm=curGm==="bomb",hd='<div class="tbr tbh"><span>#</span><span>Имя</span><span>У</span><span>П</span><span>С</span><span>Пинг</span></div>',srt=l=>[...l].sort((a,b)=>b[1]-a[1]||a[2]-b[2]);
+const col=(l,t,title,sc)=>'<div class="tbc t'+t+'"><div class="tbt"><b>'+title+'</b><i>'+(sc===undefined?"":sc)+'</i></div>'+hd+srt(l).map((s,i)=>'<div class="tbr'+(s[3]===myId?" me":"")+'"><span>'+(i+1)+'</span><span>'+u2e(s[0])+'</span><span>'+s[1]+'</span><span>'+(s[7]|0)+'</span><span>'+s[2]+'</span><span>'+(s[6]?s[6]:"–")+'</span></div>').join("")+'</div>';
 let h;if(myTm>=0){const my=myTm,n=t=>bm?(t?"ОБОРОНА (СП)":"АТАКА (Т)"):(t?"СИНИЕ":"КРАСНЫЕ");h=col(sbl.filter(s=>s[4]===my),my,n(my),bm&&bo?bo.sc[my]:undefined)+col(sbl.filter(s=>s[4]===1-my),1-my,n(1-my),bm&&bo?bo.sc[1-my]:undefined)}else h=col(sbl,2,"ИГРОКИ");
 e.innerHTML='<div class="tbw">'+h+'</div><div class="tbf">'+u2e((U2M[curGm]||[curGm])[0])+' | '+u2e(MAPS[selMap].n)+(rkc?' | комната '+u2e(rkc):"")+'</div>'}
 addEventListener("keydown",e=>{if(e.code==="Tab"&&st==="play"){e.preventDefault();if(!tbOn){tbOn=true;renderTab()}}});
@@ -979,7 +997,7 @@ function drawCards(){const bx=$("maps");bx.innerHTML="";const hx=c=>typeof c==="
 MAPS.forEach((M,i)=>{const c=document.createElement("div"),b=document.createElement("b"),n=document.createElement("i"),p=pl(M);c.className="mp"+(i===selMap?" sel":"");c.style.background="linear-gradient(135deg,"+hx(p[0]||0x334055)+","+hx(p[1]||0x101725)+")";b.textContent=M.n;n.textContent="онлайн: "+(lobN[i]||0);c.append(b,n);c.onclick=()=>{if(selMap===i)return;selMap=i;sv("fps_map",i);buildMap(i);drawCards()};bx.appendChild(c)});
 const M=MAPS[selMap]||MAPS[0],p=pl(M);$("mapt").textContent=M.n;$("mapd").textContent=M.d;u2Lab();$("mapv").style.background="linear-gradient(to top,rgba(8,12,20,.85),rgba(8,12,20,.1)),linear-gradient(135deg,"+hx(p[0]||0x334055)+","+hx(p[1]||0x101725)+")"}
 function toLobby(){
-hideLoad();
+hideLoad();{const pm=$("pm");if(pm)pm.style.display="none"}
 if(ws){const w=ws;ws=null;w.close()}
 if(wave)submitWave(0);entered=false;wave=false;wb.length=0;myTm=-1;rkc="";curGm="ffa";setFlags();setPk();for(const id of[...peers.keys()])rmPeer(id);dead=false;firing=false;stk=null;lk=null;
 if(document.exitPointerLock)document.exitPointerLock();
@@ -995,7 +1013,7 @@ cv.addEventListener("pointerdown",e=>{if(e.pointerType==="mouse"&&e.button===0)f
 addEventListener("pointerup",e=>{if(e.pointerType==="mouse"){if(e.button===2)scoped=false;else firing=false}});
 cv.addEventListener("contextmenu",e=>e.preventDefault());
 addEventListener("keydown",e=>{
-if(e.target&&e.target.id==="ci"){if(e.code==="Enter"){const v=e.target.value.trim();if(v)send({t:"c",x:v});closeChat()}else if(e.code==="Escape")closeChat();return}
+if(e.target&&e.target.id==="ci"){if(e.code==="Enter"){const v=e.target.value.trim();if(v)send({t:"c",x:v,tc:chTeamQ?1:0});closeChat()}else if(e.code==="Escape")closeChat();return}
 if(e.target&&e.target.closest&&e.target.closest("#adm"))return;
 if(e.target&&(e.target.id==="aun"||e.target.id==="aup")){if(e.code==="Enter")submitAu();return}
 if(e.target&&(e.target.id==="nm"||e.target.id==="rk")){if(e.code==="Enter")begin();return}
@@ -1004,7 +1022,8 @@ if(e.code==="Space"){jumpReq=true;e.preventDefault()}
 if(e.code.startsWith("Arrow"))e.preventDefault();
 if(st!=="play"){if(e.code==="Enter"&&(st==="menu"?$("s-home").classList.contains("on"):$("ov").style.display!=="none"))begin();return}
 if(buyOpen&&/^Digit[0-9]$/.test(e.code))return;
-if(e.code==="KeyT"||e.code==="Enter"){e.preventDefault();openChat();return}
+if(e.code==="KeyY"&&myTm>=0){e.preventDefault();chTeamQ=true;openChat();return}
+if(e.code==="KeyT"||e.code==="Enter"){e.preventDefault();chTeamQ=false;openChat();return}
 if(e.code==="KeyR")reload();if(e.code==="KeyG")throwG();if(e.code==="KeyH")gk=(gk+1)%3;if(e.code==="KeyF"||e.code==="KeyV")swap(cur===4?lw:4);
 if(e.code==="KeyQ")swap();else if(/^Digit[1-7]$/.test(e.code)&&+e.code[5]-1!==cur)swap(+e.code[5]-1);
 });
@@ -1032,7 +1051,7 @@ fb.addEventListener("pointermove",e=>{if(e.pointerId===fid){if(!dead)look(e.clie
 const fup=e=>{if(e.pointerId===fid){firing=false;fid=-1}};
 fb.addEventListener("pointerup",fup);fb.addEventListener("pointercancel",fup);
 const bind=(id,fn)=>$(id).addEventListener("pointerdown",e=>{e.preventDefault();if(st==="play"&&!dead)fn()});
-bind("jump",()=>{jumpReq=true});bind("rel",reload);bind("swp",toggleWheel);bind("zm",()=>{if(cur===2&&rel<=0)scoped=!scoped});bind("cr",()=>{crT=!crT});bind("kn",()=>swap(cur===4?lw:4));bind("gr",throwG);bind("gt",()=>{gk=(gk+1)%3});bind("chb",()=>{if(wave||!ws)return;const v=prompt("Сообщение:");if(v&&v.trim())send({t:"c",x:v.trim()})});
+bind("jump",()=>{jumpReq=true});bind("rel",reload);bind("swp",toggleWheel);bind("zm",()=>{if(cur===2&&rel<=0)scoped=!scoped});bind("cr",()=>{crT=!crT});bind("kn",()=>swap(cur===4?lw:4));bind("gr",throwG);bind("gt",()=>{gk=(gk+1)%3});bind("chb",()=>{if(wave||!ws)return;openChatWin()});
 
 /* ---------- гранаты, цифры урона, следы, чат ---------- */
 const dns=[],Vn=new THREE.Vector3(),grs=[],ggeo=new THREE.SphereGeometry(.12,8,6),gmat=new THREE.MeshLambertMaterial({color:0x3a5a2a});
@@ -1055,7 +1074,28 @@ if(wave){for(const q of[...wb]){const d=Math.hypot(x-q.x,z-q.z);if(d<GRN.rad&&wL
 if(d0<GRN.rad&&!dead&&wLos({x,z},P)){hp-=55*(1-d0/GRN.rad);dmgFx();if(hp<=0)wDie()}return}
 const hl=[],hm=new Map();for(const q of peers.values()){if(!q.alive||(myTm>=0&&q.tm===myTm))continue;const d=Math.hypot(x-q.x,z-q.z);if(d<GRN.rad&&wLos({x,z},q)){const dm=Math.round(GRN.dmg*(1-d/GRN.rad));if(dm>0){hl.push([q.id,dm,0]);hm.set(q.id,{d:dm})}}}
 if(hl.length){dmgNums(hm);send({t:"hit",w:-1,h:hl})}}
-function chatLine(n,x,tm){const k=$("cl"),d=document.createElement("div");d.textContent=n+": "+x;if(tm>=0)d.style.color=tm===0?"#ff9a9a":"#9ab8ff";k.appendChild(d);while(k.children.length>6)k.firstChild.remove();setTimeout(()=>d.remove(),9000)}
+const chH={all:[],team:[]};let chTab="all",chTeamQ=false,muteAll=false;
+function chatLine(n,x,tm,tc){if(muteAll)return;const k=$("cl"),d=document.createElement("div");d.textContent=(tc?"[К] ":"")+n+": "+x;const hh=tc?chH.team:chH.all;hh.push([n,x,tm]);if(hh.length>100)hh.shift();const cw=$("cw");if(cw&&cw.style.display==="flex")renderChat();if(tm>=0)d.style.color=tm===0?"#ff9a9a":"#9ab8ff";k.appendChild(d);while(k.children.length>6)k.firstChild.remove();setTimeout(()=>d.remove(),9000)}
+function renderChat(){const m=$("cwm"),p=$("cwp");if(!m)return;const l=chH[chTab];m.innerHTML=l.map(r=>'<div style="color:'+(r[2]===0?"#ff9a9a":r[2]===1?"#9ab8ff":"#fff")+'">'+u2e(r[0])+": "+u2e(r[1])+"</div>").join("")||'<div style="opacity:.5">Сообщений пока нет</div>';m.scrollTop=m.scrollHeight;
+p.innerHTML=sbl.filter(s=>chTab==="team"?s[4]===myTm:true).map(s=>'<div style="padding:5px 0">'+u2e(s[0])+"</div>").join("");
+for(const b of document.querySelectorAll("#cw .cwh button[data-t]"))b.classList.toggle("on",b.dataset.t===chTab)}
+function openChatWin(){let e=$("cw");if(!e){e=u2h("div","","");e.id="cw";e.innerHTML='<div class="cwh"><button type="button" data-t="all">ВСЕ</button><button type="button" data-t="team">КОМАНДА</button><span class="sp"></span><button type="button" class="cx">✕</button></div><div class="cwb"><div class="cwm" id="cwm"></div><div class="cwp" id="cwp"></div></div><div class="cwf"><input id="cwi" maxlength="80" placeholder="Написать сообщение…"><button type="button" id="cws">➤</button></div>';document.body.appendChild(e);
+e.querySelector(".cwh").addEventListener("click",ev=>{const b=ev.target.closest("button");if(!b)return;if(b.classList.contains("cx")){e.style.display="none";return}if(b.dataset.t==="team"&&myTm<0){banner("Командный чат только в командных режимах",1800);return}chTab=b.dataset.t;renderChat()});
+const sendC=()=>{const i=$("cwi"),t=i.value.trim();if(t){send({t:"c",x:t.slice(0,80),tc:chTab==="team"?1:0});i.value=""}};$("cws").onclick=sendC;$("cwi").addEventListener("keydown",ev=>{if(ev.code==="Enter")sendC();else if(ev.code==="Escape")e.style.display="none"})}
+firing=false;e.style.display="flex";renderChat()}
+/* ---------- меню паузы: команды, чат, настройки, выход ---------- */
+let pmTab="p";
+function renderPm(){const e=$("pm");if(!e)return;const b=e.querySelector(".pmb");for(const n of e.querySelectorAll("nav button"))n.classList.toggle("on",n.dataset.t===pmTab);
+if(pmTab==="s"){b.innerHTML='<div class="pms"><label>Чувствительность</label><input type="range" id="pmsn" min="0.4" max="2.5" step="0.1"><label>Громкость</label><input type="range" id="pmvl" min="0" max="1" step="0.1"></div>';
+for(const[a,c]of[["pmsn","sn"],["pmvl","vl"]]){const x=$(a);x.value=$(c).value;x.oninput=()=>{const t=$(c);t.value=x.value;t.dispatchEvent(new Event("input",{bubbles:true}));t.dispatchEvent(new Event("change",{bubbles:true}))}}return}
+const card=s=>'<div class="pmp'+(s[3]===myId?" me":"")+'"><i>'+u2e(s[0]).slice(0,1).toUpperCase()+'</i><div>'+u2e(s[0])+'<small>ID '+s[3]+'</small></div></div>',bm=curGm==="bomb";
+const col=(l,t,n)=>'<div class="pmc t'+t+'"><h3>'+n+'</h3>'+l.map(card).join("")+'</div>';
+b.innerHTML='<div class="pmt">'+(myTm>=0?col(sbl.filter(s=>s[4]===1),1,bm?"ОБОРОНА (СП)":"СИНИЕ")+col(sbl.filter(s=>s[4]===0),0,bm?"АТАКА (Т)":"КРАСНЫЕ"):col(sbl,2,"ИГРОКИ"))+"</div>"}
+function u2Pause(){st="pause";firing=false;stk=null;lk=null;closeWheel();$("lobby").style.display="none";let e=$("pm");
+if(!e){e=u2h("div","","");e.id="pm";e.innerHTML='<nav><button type="button" data-t="r">←</button><button type="button" data-t="p">▶</button><button type="button" data-t="s">⚙</button><button type="button" data-t="c">💬</button></nav><main><h2>МЕНЮ ПАУЗЫ</h2><div class="pmb"></div><div class="pmf"><button type="button" id="pmm">ЗАГЛУШИТЬ ВСЕХ</button><button type="button" id="pml">ПОКИНУТЬ МАТЧ</button></div></main>';document.body.appendChild(e);
+e.querySelector("nav").addEventListener("click",ev=>{const b=ev.target.closest("button");if(!b)return;if(b.dataset.t==="r"){e.style.display="none";$("go").click()}else if(b.dataset.t==="c"){openChatWin()}else{pmTab=b.dataset.t;renderPm()}});
+$("pmm").onclick=()=>{muteAll=!muteAll;$("pmm").textContent=muteAll?"ВКЛЮЧИТЬ ЧАТ":"ЗАГЛУШИТЬ ВСЕХ"};$("pml").onclick=()=>{e.style.display="none";$("lb").click()}}
+pmTab="p";e.style.display="flex";renderPm()}
 function openChat(){if(wave||!ws)return;const c=$("ci");c.style.display="block";c.value="";c.focus();for(const k in keys)keys[k]=false;firing=false}
 function closeChat(){const c=$("ci");c.style.display="none";c.blur()}
 /* ---------- режим ВОЛНЫ (один игрок против ботов, всё считает клиент) ---------- */

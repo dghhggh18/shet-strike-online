@@ -262,6 +262,13 @@ html.edt::after{content:"";position:fixed;inset:0;z-index:48;background:rgba(8,1
 #pm .pmf{display:flex;justify-content:space-between;gap:10px;padding:10px 14px;background:#0007}
 #pm .pmf button{padding:14px 20px;background:rgba(255,255,255,.08);border:1px solid #fff3;color:#fff;font:800 clamp(12px,2.6vh,16px) system-ui}
 #pm .pms label{display:block;margin:14px 0 4px;font-size:14px}#pm .pms input{width:min(420px,90%)}
+
+.wi{display:block;width:100%;height:26px;margin:0 0 3px;opacity:.95}
+#by .bi .wi{max-width:96px;height:24px}
+.wis{display:inline-block;width:44px;height:16px;margin:0 4px 0 0;vertical-align:middle}
+#ww button .wi{width:62px;height:22px;margin:0 auto 2px}
+#wslot{position:absolute;right:14px;top:44px;width:118px;padding:6px 8px 4px;background:rgba(0,0,0,.38);border-right:3px solid #7fa0ff;color:#fff;text-align:center;font:700 11px system-ui;pointer-events:none;display:none}
+#wslot .wi{height:34px;margin:0 auto 2px}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
@@ -701,6 +708,9 @@ $("go").addEventListener("click",begin);
 const HELP=(coarse?"Левый палец — двигаться, правый — осмотр.\nОГОНЬ, ПРЫЖОК, РЕЛОАД и СМЕНА — кнопки справа. У снайперки появляется кнопка ЗУМ. Ещё есть ПРИС, НОЖ, ГРАНАТА и ЧАТ.\nМожно водить пальцем по ОГОНЬ — и целиться, и стрелять.":"WASD — двигаться, мышь — целиться, ЛКМ — огонь.\nR — перезарядка, 1–7 или Q (5 — нож), H — тип гранаты — смена оружия, ПКМ (зажать) — прицел снайперки, Пробел — прыжок (на вышки и ступени тоже), Shift — бег, C — присед, G — граната, F — нож, T — чат.\nЕсли мышь не захватилась — смотри стрелками.")+"\nРежим: все против всех. Голова — двойной урон. Респаун через 3 секунды.\nКод комнаты: введи одинаковый код с друзьями — получится приватная комната с командами 🔴 и 🔵.\nВОЛНЫ — один против волн ботов, без онлайна.";
 /* ---------- режимы игры, флаги, дым и ослепление, редактор кнопок ---------- */
 /* ---------- интерфейс в стиле Standoff: загрузка, окна режима/карты, закуп, верхняя панель, колесо оружия ---------- */
+const WIC={"pistol": "<path d=\"M14 10h66v10H68l-4 5h-8l-3 12H41l3-12H30l-3-5H14z\"/><path d=\"M52 21h8v3h-8z\" fill-opacity=\".0\"/>", "knife": "<path d=\"M6 25L66 14l10 6L26 31z\"/><path d=\"M70 12h6v18h-6z\"/><path d=\"M76 16h34v9H76z\"/><path d=\"M106 16h5v9h-5z\"/>", "rifle": "<path d=\"M3 15h24v12l-14 3-10-4z\"/><path d=\"M26 13h46l4 4h38v5H76l-4 5H26z\"/><path d=\"M108 9h4v8h-4z\"/><path d=\"M46 26h11l4 13H50z\"/><path d=\"M32 27h9l-2 11h-8z\"/><path d=\"M44 10h18v3H44z\"/>", "smg": "<path d=\"M5 16h18v4H5z\"/><path d=\"M22 13h50v11H22z\"/><path d=\"M72 16h24v5H72z\"/><path d=\"M44 24h9v15h-9z\"/><path d=\"M28 24h9l-2 10h-8z\"/><path d=\"M60 10h10v3H60z\"/>", "sil": "<path d=\"M5 16h18v4H5z\"/><path d=\"M22 13h50v11H22z\"/><path d=\"M72 16h14v5H72z\"/><path d=\"M84 12h33v13H84z\"/><path d=\"M44 24h9v15h-9z\"/><path d=\"M28 24h9l-2 10h-8z\"/>", "shotgun": "<path d=\"M3 17h28v10l-14 3-14-4z\"/><path d=\"M30 14h30v10H30z\"/><path d=\"M60 15h58v5H60z\"/><path d=\"M58 21h52v4H58z\"/><path d=\"M64 25h26v5H64z\"/><path d=\"M38 24h8l-2 9h-8z\"/>", "sniper": "<path d=\"M2 17h30v10L16 30 2 26z\"/><path d=\"M30 15h34v10H30z\"/><path d=\"M64 18h54v4H64z\"/><path d=\"M38 6h40v6H38z\"/><path d=\"M44 12h4v4h-4z\"/><path d=\"M68 12h4v6h-4z\"/><path d=\"M44 25h9v10h-9z\"/><path d=\"M96 22h3l4 12h-3z\"/>", "frag": "<path d=\"M60 12c10 0 17 7 17 16c0 9-7 12-17 12c-10 0-17-3-17-12c0-9 7-16 17-16z\"/><path d=\"M54 4h14v7H54z\"/><path d=\"M68 5h14v4H68z\"/>", "smoke": "<path d=\"M50 12h20v26H50z\"/><path d=\"M52 6h16v6H52z\"/><path d=\"M46 20h28v4H46z\" fill-opacity=\".45\"/>", "flash": "<path d=\"M50 14h20v24H50z\"/><path d=\"M52 8h16v6H52z\"/><path d=\"M63 16l-8 10h6l-3 9 9-12h-6z\" fill-opacity=\".45\"/>", "armor": "<path d=\"M38 6h44v16c0 9-8 14-22 18C46 36 38 31 38 22z\"/>", "helmet": "<path d=\"M36 26c0-12 10-18 24-18c14 0 24 6 24 18v6H36z\"/>", "kit": "<path d=\"M32 15h56v22H32z\"/><path d=\"M50 7h20v8H50z\" fill-opacity=\".6\"/><path d=\"M56 21h8v10h-8z\" fill-opacity=\".0\"/>"};
+const WK=["rifle","shotgun","sniper","pistol","knife","smg","sil"],GIK={kev:"armor",kevh:"helmet",frag:"frag",smoke:"smoke",flash:"flash",kit:"kit"};
+const wIcon=(k,c)=>'<svg class="'+(c||"wi")+'" viewBox="0 0 120 40" fill="currentColor" aria-hidden="true">'+(WIC[k]||"")+"</svg>";
 const U2M={ffa:["ВСЕ ПРОТИВ ВСЕХ","🔫"],tdm:["КОМАНДНЫЙ БОЙ","🪖"],arms:["ГОНКА ВООРУЖЕНИЙ","🏁"],ctf:["ЗАХВАТ ФЛАГА","🚩"],bomb:["ОБЕЗВРЕЖИВАНИЕ","💣"]};
 const u2h=(tag,cls,html)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(html!==undefined)e.innerHTML=html;return e};
 const u2e=t=>String(t).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -728,10 +738,12 @@ function closeWheel(){const e=$("ww");if(e)e.style.display="none"}
 function toggleWheel(){const e=$("ww");if(e&&e.style.display==="block"){closeWheel();return}openWheel()}
 function openWheel(){if(dead||st!=="play")return;let e=$("ww");if(!e){e=u2h("div","","");e.id="ww";document.body.appendChild(e);e.addEventListener("click",ev=>{const b=ev.target.closest&&ev.target.closest("button[data-w]");if(b)swap(+b.dataset.w);closeWheel()})}
 const l=WPN.map((w,i)=>i).filter(ownd),R=Math.min(130,innerHeight*.3);e.innerHTML="";
-l.forEach((w,j)=>{const a=-Math.PI/2+j*2*Math.PI/l.length,b=u2h("button",w===cur?"on":"",u2e(WPN[w].n)+(w===4?"":"<small>"+mag[w]+"/"+res[w]+"</small>"));b.dataset.w=w;b.style.left="calc(50% + "+Math.cos(a)*R+"px)";b.style.top="calc(50% + "+Math.sin(a)*R+"px)";e.appendChild(b)});
+l.forEach((w,j)=>{const a=-Math.PI/2+j*2*Math.PI/l.length,b=u2h("button",w===cur?"on":"",wIcon(WK[w])+u2e(WPN[w].n)+(w===4?"":"<small>"+mag[w]+"/"+res[w]+"</small>"));b.dataset.w=w;b.style.left="calc(50% + "+Math.cos(a)*R+"px)";b.style.top="calc(50% + "+Math.sin(a)*R+"px)";e.appendChild(b)});
 e.style.display="block";clearTimeout(wwT);wwT=setTimeout(closeWheel,4000)}
 function topHud(){let e=$("th");if(!e){e=u2h("div","","");e.id="th";document.body.appendChild(e)}
-const bmd=curGm==="bomb"&&bo,tdm=curGm==="tdm"&&myTm>=0,on=(bmd||tdm)&&st==="play";e.style.display=on?"flex":"none";if(!on)return;
+const bmd=curGm==="bomb"&&bo,tdm=curGm==="tdm"&&myTm>=0,on=(bmd||tdm)&&st==="play";e.style.display=on?"flex":"none";
+let ws=$("wslot");if(!ws){ws=u2h("div","","");ws.id="wslot";$("hud").appendChild(ws)}ws.style.display=on&&!dead?"block":"none";if(on&&ws._c!==cur){ws._c=cur;ws.innerHTML=wIcon(WK[cur])+u2e(WPN[cur].n)}
+if(!on)return;
 const my=myTm>=0?myTm:0,sc=bmd?bo.sc:[0,1].map(t=>sbl.filter(s=>s[4]===t).reduce((a,s)=>a+s[1],0)),lt=sbl.filter(s=>s[4]===my),rt=sbl.filter(s=>s[4]===1-my),al=s=>{if(s[3]===myId)return!dead;const q=peers.get(s[3]);return!!(q&&q.alive)};
 const slot=(s,t)=>{const a=al(s);return'<div class="ths t'+t+(a?"":" dd")+'"><b>'+(a?u2e(s[0]).slice(0,1).toUpperCase():"💀")+'</b><i>'+s[1]+'</i></div>'};
 const ph=bmd?bo.ph:"",pl=bmd&&bo.bm&&bo.bm.st==="planted",tt=u2f(tmv),pt=!bmd?"КОМАНДНЫЙ БОЙ":ph==="wait"?"ОЖИДАНИЕ ИГРОКОВ":ph==="buy"?"ЗАКУПКА "+tt:ph==="post"?"ПЕРЕРЫВ":pl?"💣 БОМБА ЗАЛОЖЕНА":"РАУНД "+bo.rn;
@@ -802,9 +814,9 @@ const by=mk("div","by","display:none");by.addEventListener("click",e=>{const t=e
 const BCAT=[["Пистолеты",[]],["ПП",["smg"]],["Винтовки",["rifle","sil"]],["Тяжёлое",["shot"]],["Снайперские",["snip"]],["Снаряжение",["kev","kevh","frag","smoke","flash","kit"]]];
 function bdis(id){const it=GM.ITEMS[id];return mo<bprice(id)||(id==="kit"&&(myTm!==1||kitN))||(it.w!==undefined&&own&&own.includes(it.w))||(id==="kev"&&arm>=100)||(id==="kevh"&&arm>=100&&hlN)||(id==="frag"&&gc>=1)||(id==="smoke"&&gS>=1)||(id==="flash"&&gF>=2)}
 function buyUi(){const by=$("by");if(!by||!bo)return;
-const mine=sbl.filter(s=>s[4]===myTm&&s[3]!==myId).map(s=>'<div class="bm2">'+u2e(s[0])+'</div>').join(""),ws=(own||[3,4]).map(w=>WPN[w].n).join(" · ");
-const cols=BCAT.map(c=>'<div class="bk"><h4>'+c[0]+'</h4>'+(c[0]==="Пистолеты"?'<button type="button" class="bi own" disabled>'+WPN[3].n+'<small>есть</small></button>':"")+c[1].map(id=>{const it=GM.ITEMS[id],ow=it.w!==undefined&&own&&own.includes(it.w);return'<button type="button" class="bi'+(ow?" own":"")+'" data-i="'+id+'"'+(bdis(id)?" disabled":"")+' title="'+(BKEY[BORD.indexOf(id)]||"")+'">'+u2e(it.n)+'<small>'+(ow?"куплено":"$"+bprice(id))+'</small></button>'}).join("")+'</div>').join("");
-by.innerHTML='<div class="bl"><div class="bme"><b>'+u2e(name)+'</b><br>'+u2e(ws)+'<br>🛡 '+Math.round(arm)+(hlN?" + шлем":"")+(kitN?" · 🔧":"")+'<div class="bmo">💰 $'+mo+'</div></div>'+mine+'<button type="button" class="brnd">СЛУЧАЙНОЕ ОРУЖИЕ</button></div><div class="br"><div class="bt"><span id="bty"></span><div class="bpr"><i id="btf"></i></div><button type="button" class="bx">✕</button></div><div class="bc">'+cols+'</div></div>'}
+const mine=sbl.filter(s=>s[4]===myTm&&s[3]!==myId).map(s=>'<div class="bm2">'+u2e(s[0])+'</div>').join(""),ws=(own||[3,4]).map(w=>wIcon(WK[w],"wis")).join("");
+const cols=BCAT.map(c=>'<div class="bk"><h4>'+c[0]+'</h4>'+(c[0]==="Пистолеты"?'<button type="button" class="bi own" disabled>'+wIcon("pistol")+WPN[3].n+'<small>есть</small></button>':"")+c[1].map(id=>{const it=GM.ITEMS[id],ow=it.w!==undefined&&own&&own.includes(it.w);return'<button type="button" class="bi'+(ow?" own":"")+'" data-i="'+id+'"'+(bdis(id)?" disabled":"")+' title="'+(BKEY[BORD.indexOf(id)]||"")+'">'+wIcon(it.w!==undefined?WK[it.w]:GIK[id])+u2e(it.n)+'<small>'+(ow?"куплено":"$"+bprice(id))+'</small></button>'}).join("")+'</div>').join("");
+by.innerHTML='<div class="bl"><div class="bme"><b>'+u2e(name)+'</b><br>'+ws+'<br>🛡 '+Math.round(arm)+(hlN?" + шлем":"")+(kitN?" · 🔧":"")+'<div class="bmo">💰 $'+mo+'</div></div>'+mine+'<button type="button" class="brnd">СЛУЧАЙНОЕ ОРУЖИЕ</button></div><div class="br"><div class="bt"><span id="bty"></span><div class="bpr"><i id="btf"></i></div><button type="button" class="bx">✕</button></div><div class="bc">'+cols+'</div></div>'}
 function bombHud(){
 topHud();
 if(curGm!=="bomb"||!bo||st!=="play"){if(bhOn){bhOn=false;for(const id of["bh","bpg","bab","by","bsh"]){const e=$(id);if(e)e.style.display="none"}}return}

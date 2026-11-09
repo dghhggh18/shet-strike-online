@@ -269,6 +269,20 @@ html.edt::after{content:"";position:fixed;inset:0;z-index:48;background:rgba(8,1
 #ww button .wi{width:62px;height:22px;margin:0 auto 2px}
 #wslot{position:absolute;right:14px;top:44px;width:118px;padding:6px 8px 4px;background:rgba(0,0,0,.38);border-right:3px solid #7fa0ff;color:#fff;text-align:center;font:700 11px system-ui;pointer-events:none;display:none}
 #wslot .wi{height:34px;margin:0 auto 2px}
+
+#hpg{position:absolute;left:0;top:0;width:260px;height:56px;transform-origin:0 0}
+html.sf #mm{left:10px;top:10px;transform:none}
+html.sf #hpg{left:max(100px,calc(50% - 290px));top:auto;bottom:10px}
+.edt #hud{z-index:49}
+.edt .ed{pointer-events:auto!important;outline:2px dashed rgba(255,255,255,.7);touch-action:none;z-index:49!important;cursor:move}
+.edt .ed.sel{outline-color:#7fe08a}
+.edt #bsh,.edt #bab,.edt #bh,.edt #bpg{display:block!important}
+.edt #bpg{min-height:22px;background:rgba(255,255,255,.18)}
+.edt #hpf{width:100%!important}
+.edt #sc:empty::before{content:"Игроки · счёт";opacity:.7}
+.edt #kf:empty::before{content:"Лента убийств";opacity:.7}
+.edt #cl:empty::before{content:"Чат";opacity:.7}
+.edt #am:empty::before{content:"30 / 90\\A ПИСТОЛЕТ"}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
@@ -279,7 +293,7 @@ html.edt::after{content:"";position:fixed;inset:0;z-index:48;background:rgba(8,1
 <div id="hud"><div id="hpw"><i id="hpf"></i></div><div id="hpt"></div><div id="sc"></div><div id="am"></div><div id="ch"></div><div id="hm"></div><div id="vg"></div><div id="bn"></div><div id="kf"></div><canvas id="mm" width="128" height="128"></canvas><div id="dr"></div><div id="sco"></div><div id="dn"></div><div id="fb"></div><div id="cl"></div><input id="ci" maxlength="80" autocomplete="off" placeholder="Сообщение (Enter — отправить)"></div>
 <div id="tc"><div id="tl"></div><div id="stk"><div id="knb"></div></div>
 <div class="cb" id="fire">ОГОНЬ</div><div class="cb" id="jump">ПРЫЖОК</div><div class="cb" id="rel">РЕЛОАД</div><div class="cb" id="swp">СМЕНА</div><div class="cb" id="zm" style="display:none">ЗУМ</div><div class="cb" id="cr">ПРИС</div><div class="cb" id="kn">НОЖ</div><div class="cb" id="gr">ГРАНАТА</div><div class="cb" id="gt">ТИП</div><div class="cb" id="chb">ЧАТ</div></div>
-<div id="edt"><div id="edp"><b>Расстановка кнопок</b><span id="edn"></span><label>Размер <input id="eds" type="range" min="0.6" max="1.6" step="0.05" value="1"></label><button class="mini" id="edr" type="button">СБРОС КНОПКИ</button><button class="mini" id="eda" type="button">СБРОС ВСЕХ</button><button class="mini hi" id="edk" type="button">ГОТОВО</button></div></div>
+<div id="edt"><div id="edp"><b>Расстановка интерфейса</b><span id="edn"></span><label>Размер <input id="eds" type="range" min="0.6" max="1.6" step="0.05" value="1"></label><button class="mini" id="edr" type="button">СБРОС КНОПКИ</button><button class="mini" id="eda" type="button">СБРОС ВСЕХ</button><button class="mini hi" id="edk" type="button">ГОТОВО</button></div></div>
 <div id="fps"></div><div id="dbg"></div>
 <div id="lobby">
 <nav id="side"><button class="sbt on" data-s="home" title="Играть">▶</button><button class="sbt" data-s="inv" title="Инвентарь">🔫</button><button class="sbt" data-s="shop" title="Магазин">🪙</button><button class="sbt" data-s="top" title="Лидеры">🏆</button><button class="sbt" data-s="mkt" title="Рынок">🛒</button><button class="sbt" data-s="clan" title="Кланы">🛡</button><button class="sbt" data-s="set" title="Настройки">⚙</button><button class="sbt" data-s="chat" title="Чат">💬</button></nav>
@@ -300,7 +314,7 @@ html.edt::after{content:"";position:fixed;inset:0;z-index:48;background:rgba(8,1
 <div class="rows">
 <div class="tp on" id="tp-g"><div class="row2"><span>Мини-карта (радар)</span><div class="seg" id="sg-mm"></div></div><div class="row2"><span>Цвет кожи рук</span><div id="tonesw"></div></div><div class="row2"><span>Интерфейс</span><div class="seg" id="sg-ui"></div></div><div class="row2"><span>Вид рук и оружия</span><div class="seg" id="sg-vm"></div></div><div class="row2"><span>Профиль</span><button class="mini" id="rst" type="button">СБРОСИТЬ ПРОФИЛЬ</button></div><div class="row2" id="admrow" style="display:none"><span>Админ-панель</span><button class="mini" id="admo" type="button">ОТКРЫТЬ</button></div></div>
 <div class="tp" id="tp-v"><div class="row2"><span>Качество графики</span><div class="seg" id="sg-q"></div></div><div class="row2"><span>Авто-качество (снижает разрешение при лагах)</span><div class="seg" id="sg-ad"></div></div><div class="row2"><span>Обводка оружия</span><div class="seg" id="sg-out"></div></div><div class="row2"><span>Счётчик FPS</span><div class="seg" id="sg-fps"></div></div><div class="row2"><span>Поле зрения: <b id="fvv"></b></span><input id="fv" type="range" min="60" max="100" step="1" value="75"></div></div>
-<div class="tp" id="tp-c"><div class="row2"><span>Чувствительность</span><input id="sn" type="range" min="0.4" max="2.5" step="0.1" value="1"></div><div class="row2"><span>Размер кнопок (телефон)</span><input id="bsz" type="range" min="0.8" max="1.4" step="0.05" value="1"></div><div class="row2"><span>Расстановка кнопок (телефон)</span><button class="mini" id="edo" type="button">ИЗМЕНИТЬ</button></div><pre id="helpTxt"></pre></div>
+<div class="tp" id="tp-c"><div class="row2"><span>Чувствительность</span><input id="sn" type="range" min="0.4" max="2.5" step="0.1" value="1"></div><div class="row2"><span>Размер кнопок (телефон)</span><input id="bsz" type="range" min="0.8" max="1.4" step="0.05" value="1"></div><div class="row2"><span>Расстановка интерфейса</span><button class="mini" id="edo" type="button">ИЗМЕНИТЬ</button></div><pre id="helpTxt"></pre></div>
 <div class="tp" id="tp-a"><div class="row2"><span>Громкость</span><input id="vl" type="range" min="0" max="1" step="0.1" value="1"></div></div>
 </div>
 <div class="bar"><button class="mini" id="sdef" type="button">ПО УМОЛЧАНИЮ</button><button class="mini hi" id="sok" type="button">ПРИМЕНИТЬ</button></div>
@@ -732,7 +746,7 @@ MAPS.forEach((M,i)=>{const c=u2h("div","u2c"+(i===selMap?" sel":""),'<canvas wid
 c.onclick=()=>{if(selMap!==i){selMap=i;sv("fps_map",i);buildMap(i);drawCards()}[...g.children].forEach(x=>x.classList.toggle("sel",x===c))};g.appendChild(c)});e.classList.add("on")}
 function u2Init(){const mb=u2h("button","mini hi","");mb.id="mapBtn";mb.type="button";mb.onclick=openMaps;$("cl-c").insertBefore(mb,$("maps"));
 const gb=u2h("button","mini hi","");gb.id="gmBtn";gb.type="button";gb.onclick=openModes;$("cl-r").insertBefore(gb,$("gms"));
-const st2=u2h("button","","📊");st2.id="stb";st2.type="button";st2.onclick=()=>{tbOn=!tbOn;renderTab()};$("hud").appendChild(st2);u2Lab()}
+const st2=u2h("button","","📊");st2.id="stb";st2.type="button";st2.onclick=()=>{if(edOn)return;tbOn=!tbOn;renderTab()};$("hud").appendChild(st2);const g=u2h("div","","");g.id="hpg";$("hud").insertBefore(g,$("hpw"));g.appendChild($("hpw"));g.appendChild($("hpt"));["hpg","mm","am","sc","kf","cl","stb"].forEach(edReg);u2Lab()}
 let wwT=0;
 function closeWheel(){const e=$("ww");if(e)e.style.display="none"}
 function toggleWheel(){const e=$("ww");if(e&&e.style.display==="block"){closeWheel();return}openWheel()}
@@ -740,9 +754,11 @@ function openWheel(){if(dead||st!=="play")return;let e=$("ww");if(!e){e=u2h("div
 const l=WPN.map((w,i)=>i).filter(ownd),R=Math.min(130,innerHeight*.3);e.innerHTML="";
 l.forEach((w,j)=>{const a=-Math.PI/2+j*2*Math.PI/l.length,b=u2h("button",w===cur?"on":"",wIcon(WK[w])+u2e(WPN[w].n)+(w===4?"":"<small>"+mag[w]+"/"+res[w]+"</small>"));b.dataset.w=w;b.style.left="calc(50% + "+Math.cos(a)*R+"px)";b.style.top="calc(50% + "+Math.sin(a)*R+"px)";e.appendChild(b)});
 e.style.display="block";clearTimeout(wwT);wwT=setTimeout(closeWheel,4000)}
-function topHud(){let e=$("th");if(!e){e=u2h("div","","");e.id="th";document.body.appendChild(e)}
+let sfG="";
+function sfUpd(g){if(g!==sfG){sfG=g;document.documentElement.classList.toggle("sf",g==="bomb"||g==="tdm")}}
+function topHud(){sfUpd(curGm);let e=$("th");if(!e){e=u2h("div","","");e.id="th";document.body.appendChild(e);edReg("th")}
 const bmd=curGm==="bomb"&&bo,tdm=curGm==="tdm"&&myTm>=0,on=(bmd||tdm)&&st==="play";e.style.display=on?"flex":"none";
-let ws=$("wslot");if(!ws){ws=u2h("div","","");ws.id="wslot";$("hud").appendChild(ws)}ws.style.display=on&&!dead?"block":"none";if(on&&ws._c!==cur){ws._c=cur;ws.innerHTML=wIcon(WK[cur])+u2e(WPN[cur].n)}
+let ws=$("wslot");if(!ws){ws=u2h("div","","");ws.id="wslot";$("hud").appendChild(ws);edReg("wslot")}ws.style.display=on&&!dead?"block":"none";if(on&&ws._c!==cur){ws._c=cur;ws.innerHTML=wIcon(WK[cur])+u2e(WPN[cur].n)}
 if(!on)return;
 const my=myTm>=0?myTm:0,sc=bmd?bo.sc:[0,1].map(t=>sbl.filter(s=>s[4]===t).reduce((a,s)=>a+s[1],0)),lt=sbl.filter(s=>s[4]===my),rt=sbl.filter(s=>s[4]===1-my),al=s=>{if(s[3]===myId)return!dead;const q=peers.get(s[3]);return!!(q&&q.alive)};
 const slot=(s,t)=>{const a=al(s);return'<div class="ths t'+t+(a?"":" dd")+'"><b>'+(a?u2e(s[0]).slice(0,1).toUpperCase():"💀")+'</b><i>'+s[1]+'</i></div>'};
@@ -791,7 +807,7 @@ return "БОМБА · РАУНД "+bo.rn+" · до "+bo.wins+" побед\n🔴 
 function nearAct(){if(!bo||dead||bo.ph!=="live")return"";const bm=bo.bm;
 if(myTm===0&&hasBm&&bm.st==="carried"){for(const q of bo.sites)if(Math.hypot(q[0]-P.x,q[1]-P.z)<3)return"plant"}
 if(myTm===1&&bm.st==="planted"&&Math.hypot(bm.x-P.x,bm.z-P.z)<2.4)return"defuse";return""}
-function setAct(on){if(on===actOn)return;actOn=on;send({t:"act",on:on?1:0})}
+function setAct(on){if(edOn||on===actOn)return;actOn=on;send({t:"act",on:on?1:0})}
 function applyPh(){frz=!!(bo&&bo.ph==="buy"&&!dead);
 if(bo&&bo.ph!==lastPh){lastPh=bo.ph;buyOpen=bo.ph==="buy"}else if(!bo)buyOpen=false;
 const k=bo?JSON.stringify(bo.sites):"";
@@ -809,8 +825,8 @@ const pg=mk("div","bpg","position:fixed;left:50%;bottom:24%;transform:translateX
 pg.innerHTML='<div id="bpt"></div><div style="height:9px;background:#0009;margin-top:4px"><i id="bpf" style="display:block;height:100%;width:0;background:#ffd23d"></i></div>';
 const ab=mk("button","bab","position:fixed;right:18px;bottom:36%;z-index:31;display:none;padding:14px 16px;font:800 14px system-ui;background:#ffd23d;color:#111;border:0;border-radius:10px");ab.type="button";
 ab.addEventListener("touchstart",e=>{e.preventDefault();setAct(true)},{passive:false});ab.addEventListener("touchend",e=>{e.preventDefault();setAct(false)},{passive:false});ab.addEventListener("mousedown",()=>setAct(true));ab.addEventListener("mouseup",()=>setAct(false));
-const sb=mk("button","bsh","position:fixed;left:18%;top:28%;z-index:31;display:none;padding:12px 14px;font:800 20px system-ui;background:#3a5ab0;color:#fff;border:0;border-radius:50%");sb.type="button";sb.textContent="🛒";sb.addEventListener("click",()=>{buyOpen=!buyOpen;buyUi()});
-const by=mk("div","by","display:none");by.addEventListener("click",e=>{const t=e.target,c=t.closest&&t.closest("button");if(!c)return;if(c.dataset.i){if(!c.disabled)send({t:"buy",i:c.dataset.i})}else if(c.classList.contains("bx")){buyOpen=false}else if(c.classList.contains("brnd")){const a=["rifle","shot","snip","smg","sil"].filter(id=>!bdis(id));if(a.length)send({t:"buy",i:a[Math.random()*a.length|0]})}})}
+const sb=mk("button","bsh","position:fixed;left:18%;top:28%;z-index:31;display:none;padding:12px 14px;font:800 20px system-ui;background:#3a5ab0;color:#fff;border:0;border-radius:50%");sb.type="button";sb.textContent="🛒";sb.addEventListener("click",()=>{if(edOn)return;buyOpen=!buyOpen;buyUi()});
+const by=mk("div","by","display:none");["bh","bpg","bab","bsh"].forEach(edReg);by.addEventListener("click",e=>{const t=e.target,c=t.closest&&t.closest("button");if(!c)return;if(c.dataset.i){if(!c.disabled)send({t:"buy",i:c.dataset.i})}else if(c.classList.contains("bx")){buyOpen=false}else if(c.classList.contains("brnd")){const a=["rifle","shot","snip","smg","sil"].filter(id=>!bdis(id));if(a.length)send({t:"buy",i:a[Math.random()*a.length|0]})}})}
 const BCAT=[["Пистолеты",[]],["ПП",["smg"]],["Винтовки",["rifle","sil"]],["Тяжёлое",["shot"]],["Снайперские",["snip"]],["Снаряжение",["kev","kevh","frag","smoke","flash","kit"]]];
 function bdis(id){const it=GM.ITEMS[id];return mo<bprice(id)||(id==="kit"&&(myTm!==1||kitN))||(it.w!==undefined&&own&&own.includes(it.w))||(id==="kev"&&arm>=100)||(id==="kevh"&&arm>=100&&hlN)||(id==="frag"&&gc>=1)||(id==="smoke"&&gS>=1)||(id==="flash"&&gF>=2)}
 function buyUi(){const by=$("by");if(!by||!bo)return;
@@ -849,16 +865,23 @@ snd(180,.25,"sawtooth",.05,-80)}
 function flashAt(x,y,z){spark(x,y+.3,z,0xffffff,50,7);snd(1800,.4,"sine",.12,-600);if(dead||st!=="play")return;const dx=x-P.x,dy=y-(eyeH+P.h),dz=z-P.z,d=Math.hypot(dx,dy,dz)||1;if(d>30||!wLos({x,z},P))return;
 const cp=Math.cos(pitch),dot=(-Math.sin(yaw)*cp*dx+Math.sin(pitch)*dy-Math.cos(yaw)*cp*dz)/d,k=Math.pow(Math.max(0,(dot+.25)/1.25),1.4),dur=(.6+3.6*k)*(1-.55*d/30);
 if(dur>blindT){blindT=dur;blindMax=dur}if(dur>1.4)snd(3200,Math.min(4,dur),"sine",.035,-300)}
-const CBS=["fire","jump","rel","swp","zm","cr","kn","gr","gt","chb"];
+const CBS=["fire","jump","rel","swp","zm","cr","kn","gr","gt","chb","hpg","mm","am","sc","th","wslot","stb","kf","cl","bsh","bab","bh","bpg"];
+const EDN={hpg:"Здоровье",mm:"Радар",am:"Патроны",sc:"Счёт / игроки",th:"Верхняя панель",wslot:"Слот оружия",stb:"Табло",kf:"Лента убийств",cl:"Чат",bsh:"Магазин 🛒",bab:"Закладка / обезвреживание",bh:"Деньги и броня",bpg:"Полоса действия"};
+const edReg=id=>{const e=$(id);if(e){e.classList.add("ed");applyOne(id)}};
 let lay={},edOn=0,edSel="",edDrag=null;
 try{lay=JSON.parse(localStorage.getItem("fps_lay")||"{}")||{}}catch(e){lay={}}
-function applyOne(id){const e=$(id);if(!e)return;const o=lay[id]||{x:0,y:0,s:1};e.style.translate=o.x+"px "+o.y+"px";e.style.scale="calc(var(--bs,1) * "+o.s+")"}
+function applyOne(id){const e=$(id);if(!e)return;const o=lay[id]||{x:0,y:0,s:1};e.style.translate=o.x+"px "+o.y+"px";e.style.scale=e.classList.contains("cb")?"calc(var(--bs,1) * "+o.s+")":String(o.s)}
 function applyLay(){CBS.forEach(applyOne)}
-function selEd(id){edSel=id;CBS.forEach(i=>{const e=$(i);if(e)e.classList.toggle("sel",i===id)});const o=lay[id]||{x:0,y:0,s:1};$("eds").value=o.s;$("edn").textContent="Кнопка: "+($(id).textContent||id)}
-function startEd(){edOn=1;document.documentElement.classList.add("edt");$("lobby").style.display="none";$("edt").style.display="block";selEd("fire")}
-function endEd(){edOn=0;document.documentElement.classList.remove("edt");$("edt").style.display="none";$("lobby").style.display="flex";sv("fps_lay",JSON.stringify(lay))}
+function selEd(id){edSel=id;CBS.forEach(i=>{const e=$(i);if(e)e.classList.toggle("sel",i===id)});const o=lay[id]||{x:0,y:0,s:1};$("eds").value=o.s;$("edn").textContent="Элемент: "+(EDN[id]||($(id)&&$(id).textContent)||id)}
+let edPrevHud="";
+function edSamples(on){sfUpd(on?gmode:curGm);
+if(on){mkBombUi();topHud();const th=$("th");th.innerHTML='<div class="thr"><div class="ths t1"><b>А</b><i>3</i></div><div class="ths t1"><b>Б</b><i>1</i></div></div><div class="thc"><div class="thsc"><b class="t1">2</b><em>1:55</em><b class="t0">1</b></div><div class="thp">РАУНД 4</div></div><div class="thr"><div class="ths t0"><b>В</b><i>2</i></div><div class="ths t0 dd"><b>💀</b><i>0</i></div></div>';th.style.display="flex";th._h="";
+const w=$("wslot");if(w){w.innerHTML=wIcon("rifle")+"Винтовка";w.style.display="block";w._c=-1}$("hpt").textContent="HP 100";setT("bh","🔴 ТЕРРОРИСТ · 💰$800 · 🛡0")}
+else{const th=$("th");if(th){th.style.display="none";th._h=""}const w=$("wslot");if(w){w.style.display="none";w._c=-1}$("hpt").textContent="";setT("bh","")}}
+function startEd(){edOn=1;edPrevHud=$("hud").style.display;document.documentElement.classList.add("edt");$("lobby").style.display="none";$("hud").style.display="";edSamples(true);$("edt").style.display="block";selEd("fire")}
+function endEd(){edOn=0;edSamples(false);$("hud").style.display=edPrevHud;document.documentElement.classList.remove("edt");$("edt").style.display="none";$("lobby").style.display="flex";sv("fps_lay",JSON.stringify(lay))}
 function initEd(){
-document.addEventListener("pointerdown",e=>{if(!edOn)return;const b=e.target&&e.target.closest?e.target.closest(".cb"):null;if(!b)return;e.stopPropagation();e.preventDefault();selEd(b.id);const o=lay[b.id]||(lay[b.id]={x:0,y:0,s:1});edDrag={id:b.id,sx:e.clientX,sy:e.clientY,ox:o.x,oy:o.y};try{b.setPointerCapture(e.pointerId)}catch(x){}},true);
+document.addEventListener("pointerdown",e=>{if(!edOn)return;const b=e.target&&e.target.closest?e.target.closest(".cb,.ed"):null;if(!b)return;e.stopPropagation();e.preventDefault();selEd(b.id);const o=lay[b.id]||(lay[b.id]={x:0,y:0,s:1});edDrag={id:b.id,sx:e.clientX,sy:e.clientY,ox:o.x,oy:o.y};try{b.setPointerCapture(e.pointerId)}catch(x){}},true);
 document.addEventListener("pointermove",e=>{if(!edDrag)return;const o=lay[edDrag.id];o.x=Math.round(edDrag.ox+e.clientX-edDrag.sx);o.y=Math.round(edDrag.oy+e.clientY-edDrag.sy);applyOne(edDrag.id)},true);
 const up=()=>{if(edDrag){edDrag=null;sv("fps_lay",JSON.stringify(lay))}};document.addEventListener("pointerup",up,true);document.addEventListener("pointercancel",up,true);
 $("eds").oninput=e=>{if(!edSel)return;const o=lay[edSel]||(lay[edSel]={x:0,y:0,s:1});o.s=+e.target.value;applyOne(edSel)};

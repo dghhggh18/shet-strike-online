@@ -279,10 +279,13 @@ html.sf #hpg{left:max(100px,calc(50% - 290px));top:auto;bottom:10px}
 .edt #bsh,.edt #bab,.edt #bh,.edt #bpg{display:block!important}
 .edt #bpg{min-height:22px;background:rgba(255,255,255,.18)}
 .edt #hpf{width:100%!important}
-.edt #sc:empty::before{content:"Игроки · счёт";opacity:.7}
-.edt #kf:empty::before{content:"Лента убийств";opacity:.7}
-.edt #cl:empty::before{content:"Чат";opacity:.7}
-.edt #am:empty::before{content:"30 / 90\\A ПИСТОЛЕТ"}
+
+#edp{display:block;max-width:min(92vw,520px);opacity:.93}
+#edh{display:flex;gap:8px;align-items:center;cursor:move;touch-action:none}#edh b{flex:1;white-space:nowrap}
+#edbody{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:6px}#edp.col #edbody,#edp.col #edhint{display:none}
+#edl{max-width:46vw;font-size:12px;padding:4px}#edhint{margin-top:6px;font-size:11px;opacity:.7;font-weight:500}
+.edt #tc{z-index:50}
+html.edt,html.edt body,html.edt canvas{touch-action:none;overscroll-behavior:none}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
@@ -293,7 +296,7 @@ html.sf #hpg{left:max(100px,calc(50% - 290px));top:auto;bottom:10px}
 <div id="hud"><div id="hpw"><i id="hpf"></i></div><div id="hpt"></div><div id="sc"></div><div id="am"></div><div id="ch"></div><div id="hm"></div><div id="vg"></div><div id="bn"></div><div id="kf"></div><canvas id="mm" width="128" height="128"></canvas><div id="dr"></div><div id="sco"></div><div id="dn"></div><div id="fb"></div><div id="cl"></div><input id="ci" maxlength="80" autocomplete="off" placeholder="Сообщение (Enter — отправить)"></div>
 <div id="tc"><div id="tl"></div><div id="stk"><div id="knb"></div></div>
 <div class="cb" id="fire">ОГОНЬ</div><div class="cb" id="jump">ПРЫЖОК</div><div class="cb" id="rel">РЕЛОАД</div><div class="cb" id="swp">СМЕНА</div><div class="cb" id="zm" style="display:none">ЗУМ</div><div class="cb" id="cr">ПРИС</div><div class="cb" id="kn">НОЖ</div><div class="cb" id="gr">ГРАНАТА</div><div class="cb" id="gt">ТИП</div><div class="cb" id="chb">ЧАТ</div></div>
-<div id="edt"><div id="edp"><b>Расстановка интерфейса</b><span id="edn"></span><label>Размер <input id="eds" type="range" min="0.6" max="1.6" step="0.05" value="1"></label><button class="mini" id="edr" type="button">СБРОС КНОПКИ</button><button class="mini" id="eda" type="button">СБРОС ВСЕХ</button><button class="mini hi" id="edk" type="button">ГОТОВО</button></div></div>
+<div id="edt"><div id="edp"><div id="edh"><b>Расстановка интерфейса</b><button class="mini" id="edc" type="button">▾</button><button class="mini hi" id="edk" type="button">ГОТОВО</button></div><div id="edbody"><select id="edl"></select><span id="edn"></span><label>Размер <input id="eds" type="range" min="0.6" max="1.6" step="0.05" value="1"></label><button class="mini" id="edr" type="button">СБРОС ЭЛЕМЕНТА</button><button class="mini" id="eda" type="button">СБРОС ВСЕХ</button></div><div id="edhint">Выбери элемент в списке или тапни по нему, затем тяни за любое место экрана. Плашку можно двигать за заголовок.</div></div></div>
 <div id="fps"></div><div id="dbg"></div>
 <div id="lobby">
 <nav id="side"><button class="sbt on" data-s="home" title="Играть">▶</button><button class="sbt" data-s="inv" title="Инвентарь">🔫</button><button class="sbt" data-s="shop" title="Магазин">🪙</button><button class="sbt" data-s="top" title="Лидеры">🏆</button><button class="sbt" data-s="mkt" title="Рынок">🛒</button><button class="sbt" data-s="clan" title="Кланы">🛡</button><button class="sbt" data-s="set" title="Настройки">⚙</button><button class="sbt" data-s="chat" title="Чат">💬</button></nav>
@@ -872,22 +875,25 @@ let lay={},edOn=0,edSel="",edDrag=null;
 try{lay=JSON.parse(localStorage.getItem("fps_lay")||"{}")||{}}catch(e){lay={}}
 function applyOne(id){const e=$(id);if(!e)return;const o=lay[id]||{x:0,y:0,s:1};e.style.translate=o.x+"px "+o.y+"px";e.style.scale=e.classList.contains("cb")?"calc(var(--bs,1) * "+o.s+")":String(o.s)}
 function applyLay(){CBS.forEach(applyOne)}
-function selEd(id){edSel=id;CBS.forEach(i=>{const e=$(i);if(e)e.classList.toggle("sel",i===id)});const o=lay[id]||{x:0,y:0,s:1};$("eds").value=o.s;$("edn").textContent="Элемент: "+(EDN[id]||($(id)&&$(id).textContent)||id)}
+function selEd(id){edSel=id;CBS.forEach(i=>{const e=$(i);if(e)e.classList.toggle("sel",i===id)});const o=lay[id]||{x:0,y:0,s:1};const l=$("edl");if(l)l.value=id;$("eds").value=o.s;$("edn").textContent="Элемент: "+(EDN[id]||($(id)&&$(id).textContent)||id)}
 let edPrevHud="";
+function edPanel(){const p=$("edp"),h=$("edh");let d=null;h.addEventListener("pointerdown",e=>{if(e.target.closest("button"))return;const r=p.getBoundingClientRect();p.style.transform="none";p.style.left=r.left+"px";p.style.top=r.top+"px";d={x:e.clientX-r.left,y:e.clientY-r.top};try{h.setPointerCapture(e.pointerId)}catch(x){}e.stopPropagation()});
+h.addEventListener("pointermove",e=>{if(!d)return;p.style.left=Math.max(0,Math.min(innerWidth-70,e.clientX-d.x))+"px";p.style.top=Math.max(0,Math.min(innerHeight-34,e.clientY-d.y))+"px"});h.addEventListener("pointerup",()=>{d=null});$("edc").onclick=()=>p.classList.toggle("col")}
+const EDS={am:"30 / 90\nПИСТОЛЕТ",sc:"Игроки · счёт",kf:"Лента убийств",cl:"Чат"};
 function edSamples(on){sfUpd(on?gmode:curGm);
 if(on){mkBombUi();topHud();const th=$("th");th.innerHTML='<div class="thr"><div class="ths t1"><b>А</b><i>3</i></div><div class="ths t1"><b>Б</b><i>1</i></div></div><div class="thc"><div class="thsc"><b class="t1">2</b><em>1:55</em><b class="t0">1</b></div><div class="thp">РАУНД 4</div></div><div class="thr"><div class="ths t0"><b>В</b><i>2</i></div><div class="ths t0 dd"><b>💀</b><i>0</i></div></div>';th.style.display="flex";th._h="";
-const w=$("wslot");if(w){w.innerHTML=wIcon("rifle")+"Винтовка";w.style.display="block";w._c=-1}$("hpt").textContent="HP 100";setT("bh","🔴 ТЕРРОРИСТ · 💰$800 · 🛡0")}
-else{const th=$("th");if(th){th.style.display="none";th._h=""}const w=$("wslot");if(w){w.style.display="none";w._c=-1}$("hpt").textContent="";setT("bh","")}}
-function startEd(){edOn=1;edPrevHud=$("hud").style.display;document.documentElement.classList.add("edt");$("lobby").style.display="none";$("hud").style.display="";edSamples(true);$("edt").style.display="block";selEd("fire")}
+const w=$("wslot");if(w){w.innerHTML=wIcon("rifle")+"Винтовка";w.style.display="block";w._c=-1}setT("hpt","HP 100");setT("bh","🔴 ТЕРРОРИСТ · 💰$800 · 🛡0");setT("am",EDS.am);setT("sc",EDS.sc);$("kf").textContent=EDS.kf;$("cl").textContent=EDS.cl}
+else{const th=$("th");if(th){th.style.display="none";th._h=""}const w=$("wslot");if(w){w.style.display="none";w._c=-1}setT("hpt","");setT("bh","");setT("am","");setT("sc","");$("kf").textContent="";$("cl").textContent=""}}
+function startEd(){edOn=1;edPrevHud=$("hud").style.display;document.documentElement.classList.add("edt");$("lobby").style.display="none";$("hud").style.display="";edSamples(true);{const l=$("edl");l.innerHTML=CBS.filter(i=>$(i)).map(i=>'<option value="'+i+'">'+u2e(EDN[i]||$(i).textContent||i)+"</option>").join("")}$("edt").style.display="block";selEd("fire")}
 function endEd(){edOn=0;edSamples(false);$("hud").style.display=edPrevHud;document.documentElement.classList.remove("edt");$("edt").style.display="none";$("lobby").style.display="flex";sv("fps_lay",JSON.stringify(lay))}
 function initEd(){
-document.addEventListener("pointerdown",e=>{if(!edOn)return;const b=e.target&&e.target.closest?e.target.closest(".cb,.ed"):null;if(!b)return;e.stopPropagation();e.preventDefault();selEd(b.id);const o=lay[b.id]||(lay[b.id]={x:0,y:0,s:1});edDrag={id:b.id,sx:e.clientX,sy:e.clientY,ox:o.x,oy:o.y};try{b.setPointerCapture(e.pointerId)}catch(x){}},true);
+document.addEventListener("pointerdown",e=>{if(!edOn)return;const t=e.target;if(t&&t.closest&&t.closest("#edp"))return;const b=t&&t.closest?t.closest(".cb,.ed"):null,id=b?b.id:edSel;if(!id)return;e.stopPropagation();e.preventDefault();selEd(id);const o=lay[id]||(lay[id]={x:0,y:0,s:1});edDrag={id,sx:e.clientX,sy:e.clientY,ox:o.x,oy:o.y};try{(b||t).setPointerCapture(e.pointerId)}catch(x){}},true);
 document.addEventListener("pointermove",e=>{if(!edDrag)return;const o=lay[edDrag.id];o.x=Math.round(edDrag.ox+e.clientX-edDrag.sx);o.y=Math.round(edDrag.oy+e.clientY-edDrag.sy);applyOne(edDrag.id)},true);
 const up=()=>{if(edDrag){edDrag=null;sv("fps_lay",JSON.stringify(lay))}};document.addEventListener("pointerup",up,true);document.addEventListener("pointercancel",up,true);
 $("eds").oninput=e=>{if(!edSel)return;const o=lay[edSel]||(lay[edSel]={x:0,y:0,s:1});o.s=+e.target.value;applyOne(edSel)};
 $("edr").onclick=()=>{delete lay[edSel];applyOne(edSel);selEd(edSel)};
 $("eda").onclick=()=>{lay={};applyLay();selEd(edSel||"fire")};
-$("edk").onclick=endEd;$("edo").onclick=startEd;applyLay()}
+$("edk").onclick=endEd;$("edo").onclick=startEd;$("edl").onchange=e=>selEd(e.target.value);edPanel();applyLay()}
 /* ---------- аккаунт: вход, профиль на сервере, лидеры ---------- */
 async function api(p,b){const r=await fetch(p,{method:b?"POST":"GET",headers:Object.assign({"Content-Type":"application/json"},atok?{Authorization:"Bearer "+atok}:{}),body:b?JSON.stringify(b):undefined});let j={};try{j=await r.json()}catch(e){}
 if(r.status===401&&acct&&p!=="/api/login"){atok="";sv("fps_at","");acct=null;authUi()}if(!r.ok)throw new Error(j.error||"Ошибка "+r.status);return j}
